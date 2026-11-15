@@ -937,7 +937,7 @@ function go(i,o){o=o||{};const ST=MODE.stages;if(i>=ST.length)i=-1;cur=i;dwell=0
  if(i>=0){const b=ST[i].btn;bar.scrollTo({left:b.offsetLeft-bar.clientWidth/2+b.offsetWidth/2,behavior:RM?'auto':'smooth'});}
  try{history.replaceState(null,'','#'+MODE.key+(i<0?'':'-'+(i+1)));}catch(e){}}
 function setMode(key,i,instant){MODE=MODES[key];document.querySelectorAll('.modes button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.m===key)));
- document.querySelectorAll('.co,.pill').forEach(e=>e.classList.remove('on'));buildBar();lastChip='';if(key==='grp'&&i<0)JT=0;
+ document.querySelectorAll('.co,.pill').forEach(e=>e.classList.remove('on'));buildBar();lastChip='';if(key==='grp'&&i<0)JT=30;
  const k=i>=0?MODE.stages[i].cam:MODE.over.cam;camS.t.set(k[0],k[1],k[2]);camS.r=k[3]*rf()*(instant?1.6:1.35);camS.th=k[4]-.6;camS.ph=k[5]-.22;tw=null;
  go(i,{dur:3});dwell=0;}
 document.querySelectorAll('.modes button').forEach(b=>b.addEventListener('click',()=>{if(MODE.key!==b.dataset.m)setMode(b.dataset.m,-1);}));
