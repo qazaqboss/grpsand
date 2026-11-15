@@ -106,10 +106,23 @@ button{font:inherit;color:inherit}
 .pill.on{opacity:1;pointer-events:auto}
 .pill:hover{border-color:var(--cy)}
 .pill b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--cy);color:#04121b;font:600 11px var(--f-body)}
+.modes{pointer-events:auto;display:flex;padding:3px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin-right:auto;margin-left:18px}
+.modes button{border:0;background:transparent;min-height:36px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;color:var(--soft);white-space:nowrap}
+.modes button[aria-selected=true]{background:var(--qz);color:#04121b}
+.modes button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+.modes .sh{display:none}
+.chart{margin:4px 0 6px;padding:10px 10px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(4,14,21,.55)}
+.chart canvas{display:block;width:100%;height:110px}
+.chl{display:flex;gap:12px;font-size:11.5px;color:var(--mute);margin-bottom:6px}
+.chl span{display:flex;align-items:center;gap:5px}.chl span::before{content:"";width:12px;height:2px;border-radius:1px;background:var(--c)}
+.chn{font-size:11px;color:var(--mute);margin-top:4px}
+.cta{width:100%;margin-top:16px;min-height:44px;background:rgba(239,226,196,.1);border-color:rgba(239,226,196,.35);color:var(--qz)}
 .hint{position:fixed;z-index:9;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 92px);font-size:12px;color:var(--mute);pointer-events:none;transition:opacity .6s}
 
 @media (max-width:760px){
-  .brand span{display:none}
+  .brand{display:none}
+  .modes{margin-left:0}
+  .modes .full{display:none}.modes .sh{display:inline}
   .tools .lbl{display:none}
   .chip{top:calc(env(safe-area-inset-top,0px) + 62px);font-size:12px}
   html,body{height:auto;min-height:100%}
@@ -138,7 +151,11 @@ button{font:inherit;color:inherit}
 <div id="labs" aria-hidden="true"></div>
 
 <header class="hud top">
-  <div class="brand"><b>Путь кварцевого проппанта</b><span>от пласта до трещины ГРП</span></div>
+  <div class="brand"><b>Путь кварцевого проппанта</b><span>от карьера до скважины</span></div>
+  <div class="modes" role="tablist" aria-label="Раздел">
+    <button type="button" role="tab" data-m="pesok" aria-selected="true"><span class="full">Производство песка</span><span class="sh">Песок</span></button>
+    <button type="button" role="tab" data-m="grp" aria-selected="false"><span class="full">ГРП на скважине</span><span class="sh">ГРП</span></button>
+  </div>
   <div class="tools">
     <button class="btn" id="bOver" aria-pressed="false" title="Вся цепочка сверху (O)"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg><span class="lbl">Вся цепочка</span></button>
     <button class="btn" id="bSpeed" title="Скорость анимации">1×</button>
@@ -252,33 +269,95 @@ const STAGES=[
  labs:[[[26,11.2,-14],'Зерно под микроскопом','сферичность ≈ 0,8 · округлость ≈ 0,7'],[[22.6,3.6,-14.8],'Ro-Tap','стопка сит, 10 мин'],[[25.4,4.1,-14.8],'Пресс','тест на раздавливание'],[[28,2.6,-14.8],'Турбидиметр','мутность, FTU']]},
 {n:'Логистика',title:'Силосы и логистика',state:'Товарный проппант в силосах',
  lead:'Готовый песок хранят в силосах по маркам и грузят в хопперы. Песок дешёвый и тяжёлый, поэтому цену на скважине определяет доставка. Каждая лишняя перевалка дробит зёрна и поднимает мутность.',
- steps:['Галерея распределяет марки по силосам','Вагоны-хопперы загружаются под силосами','Состав идёт до перевалки у куста','Пневматикой песок перегружают в ёмкости флота ГРП'],
+ steps:['Галерея распределяет марки по силосам','Вагоны-хопперы загружаются под силосами','Состав идёт до перевалки у куста','На станции перевалки песок пересыпают в силосы и песковозы до куста'],
  nums:[['~$41','за короткую тонну на карьере (США, Northern White)'],['до $120','та же тонна на устье в Техасе']],
  data:['тариф, ₸/т·км','число перевалок','мутность после доставки'],
  need:['Силосы и фасовка','Ж/д тупик или перевозчик','Защита от влаги','Паспорт партии'],
  cam:[46,6,0,54,.42,1.0], mark:[32,21,0],
- labs:[[[26,16.6,0],'Силос 20/40','основная марка'],[[32,16.6,0],'Силос 40/70','сланцы, многостадийный ГРП'],[[38,16.6,0],'Силос 100 mesh','первые порции'],[[62,3.6,0],'Вагоны-хопперы','к кусту скважин']]},
-{n:'ГРП',title:'ГРП на кусте',state:'Закачка смеси в скважину',
- lead:'На кустовой площадке работает флот ГРП. Из ёмкостей песок идёт в блендер, тот смешивает его с жидкостью разрыва, насосные установки через манифольд закачивают смесь в скважину. Трещины делают стадиями, от носка ствола к пятке.',
- steps:['Подушка: чистая жидкость раскрывает трещину','Мелкая фракция 100 mesh заходит в узкие ветви','Основная фракция строит каркас трещины','Продавка вытесняет песок из ствола в пласт','Пробка отсекает стадию, флот переходит к следующей'],
- nums:[['≤ ~40 МПа','давление смыкания для кварца (≈ 6000 psi)'],['кг/м³','концентрацию песка поднимают ступенями']],
- data:['давление смыкания','т проппанта на стадию','концентрация, кг/м³','число стадий'],
- need:['Дизайн ГРП','Подрядчик с флотом','Объём песка на стадию'],
- cam:[100,2,1,36,-.5,.95], mark:[100,9,0],
- labs:[[[90.5,7,-7],'Ёмкости с песком','по маркам'],[[91,3,-2.5],'Блендер','песок + жидкость'],[[101,1.8,4.6],'Насосные установки','высокое давление'],[[101,1.6,0],'Манифольд','сбор потока'],[[112,4.8,0],'Устье скважины','фонтанная арматура']]},
-{n:'Трещина',title:'В трещине: ради чего всё',state:'Проппант держит трещину открытой',
- lead:'Горное давление пытается сомкнуть трещину. Зёрна держат её открытой, нефть и газ идут по порам между ними. Отсюда все требования к песку: круглое зерно даёт больше пор, прочное — меньше мелочи, чистое — поры не забиты.',
- steps:['Жидкость раскрывает трещины стадиями от носка к пятке','Песок заносится в трещину и оседает','Давление сбрасывают — трещина смыкается на пачку зёрен','Нефть и газ притекают по каркасу к стволу'],
- nums:[['мД·м','проводимость трещины — итоговая мера'],['до +23,8%','добычи в моделировании для Атырауского региона с облегчённым проппантом']],
- data:['проводимость','проницаемость пачки','прирост дебита','вынос проппанта'],
- need:['Прочный, круглый, чистый песок','Верная фракция под пласт'],
- cam:[138,-31,0,46,.72,1.3], mark:[140,-23,0],
- labs:[[[160,-30.6,0],'Горизонтальный ствол','носок → пятка'],[[136,-25.4,0],'Трещина ГРП','раскрыта песком'],[[150,-38.6,6],'Целевой пласт','нефть в порах'],[[112,-12,0],'Вертикальный ствол','к устью']]}
+ labs:[[[26,16.6,0],'Силос 20/40','основная марка'],[[32,16.6,0],'Силос 40/70','сланцы, многостадийный ГРП'],[[38,16.6,0],'Силос 100 mesh','первые порции'],[[62,3.6,0],'Вагоны-хопперы','к станции перевалки'],[[91,11,-7],'Станция перевалки','силосы → песковозы']]}
 ];
-const OVER={title:'Вся цепочка на одной площадке',
- lead:'Двенадцать этапов от разведки участка до трещины в пласте. Песок идёт по конвейерам слева направо: бурый — сырой, светлый — сухой, дальше — по маркам. Нажмите на любой этап на схеме или запустите тур.',
- legend:[['var(--wet)','сырой и влажный песок'],['var(--qz)','сухой песок 20/40'],['#e0b46a','марка 40/70'],['#c98b5a','марка 100 mesh'],['var(--water)','оборотная вода'],['#6b4b33','шлам'],['var(--co)','флот ГРП'],['var(--amb)','нефть и газ']],
- cam:[18,-8,0,250,.1,.84]};
+const GSTAGES=[
+{n:'Площадка',title:'Площадка и расстановка флота',win:[0,12],
+ lead:'На подготовленную кустовую площадку заезжает флот ГРП. Ёмкости с водой, контейнеры с песком по маркам, станцию химреагентов, блендер, насосные установки и манифольд расставляют по схеме и обвязывают линиями высокого давления.',
+ steps:['Завоз воды и проппанта по маркам','Насосные установки встают по обе стороны манифольда','Монтаж и опрессовка линий высокого давления','Проверка датчиков и связи в станции контроля'],
+ nums:[['10','насосных установок в модели'],['по маркам','100 mesh, 40/70 и 20/40 в отдельных ёмкостях']],
+ data:['давление опрессовки','объём воды','запас проппанта, т','исправность насосов'],
+ need:['Подрядчик ГРП с флотом','Площадка и подъезды','Вода и проппант','План работ'],
+ cam:[-24,1,0,54,.55,.95],mark:[-24,9,0],
+ labs:[[[-50,3.4,-5],'Ёмкости с водой','основа жидкости разрыва'],[[-35.5,7.6,-10.5],'Песок по маркам','100 mesh · 40/70 · 20/40'],[[-30,3.4,-3],'Блендер','смешивает песок и жидкость'],[[-17,3.6,5.2],'Насосные установки','высокое давление'],[[-22,4.2,14],'Станция контроля','давление, расход, концентрация'],[[0,6,0],'Устье скважины','фонтанная арматура']]},
+{n:'Перфорация',title:'Перфорация и пробка',win:[12,22],
+ lead:'Горизонтальный ствол обсажен и зацементирован. Через лубрикатор на кабеле спускают перфоратор. Первую стадию делают у носка ствола, дальше каждая пробка будет отсекать уже обработанный интервал. Заряды пробивают колонну и цемент и открывают путь в пласт.',
+ steps:['Кран ставит лубрикатор на устье','Перфоратор на кабеле идёт по вертикали и горизонтали к носку','Отстрел кластеров зарядов','Кабель поднимают, устье готово к закачке'],
+ nums:[['носок → пятка','порядок обработки стадий'],['кластеры','несколько интервалов перфорации на стадию']],
+ data:['глубина по стволу','число кластеров','привязка по каротажу'],
+ need:['Каротажный подъёмник','Кран и лубрикатор','Перфоратор, пробки'],
+ cam:[34,-18,0,66,.2,1.4],mark:[30,-24,0],
+ labs:[[[0,12,0],'Лубрикатор','шлюз для кабеля на устье'],[[12,4,10],'Каротажный подъёмник','спуск на кабеле'],[[62,-29.6,0],'Интервал стадии 1','у носка ствола'],[[6,-30.4,0],'Обсадная колонна','зацементирована']]},
+{n:'Подушка',title:'Подушка: разрыв пласта',win:[22,30],
+ lead:'Насосы выходят на расход. Давление растёт до давления разрыва, порода лопается, и давление падает до уровня распространения трещины. Чистая жидкость без песка раскрывает трещину и создаёт ширину, в которую потом зайдёт проппант.',
+ steps:['Насосы плавно поднимают расход','Пик давления — разрыв породы','Давление снижается до давления распространения','Трещина растёт в длину и высоту'],
+ nums:[['пик','давление разрыва на графике'],['0 кг/м³','в подушке нет песка']],
+ data:['давление на устье','расход, м³/мин','объём подушки'],
+ need:['Жидкость разрыва','Все насосы в работе'],
+ cam:[60,-31,0,32,.8,1.25],mark:[62,-22,0],
+ labs:[[[62,-26.6,0],'Трещина растёт','чистая жидкость'],[[64,-32.6,0],'Перфорации','вход в пласт'],[[50,-37.5,9],'Целевой пласт','нефть в порах']]},
+{n:'Проппант',title:'Закачка проппанта',win:[30,44],
+ lead:'Блендер дозирует песок в жидкость, концентрацию поднимают ступенями: сначала мелкая фракция 100 mesh заходит в узкие ветви трещины, затем основная марка строит каркас. Если трещина перестаёт принимать песок, давление резко растёт — это стоп по песку.',
+ steps:['Конвейер подаёт песок из ёмкостей в блендер','Блендер смешивает песок с жидкостью','Насосы прокачивают смесь через манифольд в скважину','Концентрацию поднимают ступенями'],
+ nums:[['ступени','концентрацию поднимают постепенно'],['~60–530','кг/м³ в модели (ориентир)']],
+ data:['концентрация, кг/м³','масса проппанта','давление','расход'],
+ need:['Песок нужных марок','Точная дозировка блендера'],
+ cam:[-27,1.5,-3,30,.45,1.0],mark:[-30,7,-3],
+ labs:[[[-35.5,7.6,-10.5],'Подача песка','из ёмкостей по маркам'],[[-31.6,3.4,-3],'Блендер','песок + жидкость'],[[-13.5,3.6,-5.2],'Насосы','качают смесь'],[[-12,1.4,0],'Манифольд','собирает поток в устье']]},
+{n:'Продавка',title:'Продавка',win:[44,51],
+ lead:'Чистая жидкость вытесняет смесь из ствола до перфораций, чтобы песок не остался в колонне и не мешал спуску следующей пробки. Объём продавки считают по объёму ствола до интервала, лишний объём оттолкнёт песок от ствола.',
+ steps:['Блендер прекращает подачу песка','Чистая жидкость идёт вслед за смесью','Последний песок уходит в трещину','Насосы готовятся к остановке'],
+ nums:[['объём ствола','основа расчёта продавки'],['без пересыла','иначе зона у ствола теряет песок']],
+ data:['объём продавки','давление','остаток песка в стволе'],
+ need:['Расчёт объёма ствола'],
+ cam:[40,-30,0,44,.3,1.3],mark:[40,-24,0],
+ labs:[[[40,-31,0],'Ствол','чистая жидкость вытесняет смесь'],[[62,-25.6,0],'Песок в трещине','остаётся в пласте']]},
+{n:'Смыкание',title:'Остановка и смыкание',win:[51,58],
+ lead:'Насосы останавливают и записывают мгновенное давление остановки (ISIP). Дальше давление падает, жидкость уходит в пласт, и трещина смыкается на песок. С этого момента зёрна держат горное давление.',
+ steps:['Насосы останавливают','Фиксируют ISIP','Давление падает, жидкость фильтруется в пласт','Трещина смыкается на пачку проппанта'],
+ nums:[['ISIP','мгновенное давление остановки'],['≤ ~40 МПа','давление смыкания для кварца']],
+ data:['ISIP','темп падения давления','давление смыкания'],
+ need:['Прочный песок под давление смыкания'],
+ cam:[62,-31,0,28,.95,1.3],mark:[62,-22,0],
+ labs:[[[62,-23.6,11.6],'Горное давление','сжимает трещину'],[[62,-32,6],'Пачка проппанта','держит трещину открытой']]},
+{n:'Стадии',title:'Следующие стадии',win:[58,73],
+ lead:'Цикл повторяется к пятке ствола: пробка отсекает готовую стадию, перфорация открывает новый интервал, затем подушка, песок, продавка. В модели 5 стадий; на горизонтальных скважинах их бывает несколько десятков.',
+ steps:['Пробка и перфоратор идут на кабеле к следующему интервалу','Пробка отсекает обработанную стадию','Отстрел новых кластеров','Закачка стадии по тому же графику'],
+ nums:[['5','стадий в модели'],['десятки','стадий на длинных горизонтальных стволах']],
+ data:['число стадий','т проппанта на стадию','время на стадию'],
+ need:['Запас пробок и зарядов','Песок на все стадии'],
+ cam:[42,-31,0,58,.55,1.28],mark:[42,-22,0],
+ labs:[[[57,-30.6,0],'Пробка','отсекает стадию 1'],[[22,-26,0],'Стадия 5','у пятки ствола'],[[42,-26,0],'Стадия 3','по тому же графику']]},
+{n:'Освоение',title:'Разбуривание пробок и освоение',win:[73,85],
+ lead:'Колтюбинговая установка спускает на гибкой трубе долото с забойным двигателем и разбуривает все пробки. Затем скважину осваивают: жидкость ГРП с частью песка возвращается на поверхность, её отделяют в сепараторе и ёмкостях.',
+ steps:['Инжектор колтюбинга на устье','Долото проходит и разбуривает пробки','Обратный приток жидкости ГРП','Сепаратор отделяет жидкость и вынесенный песок'],
+ nums:[['обратный приток','часть жидкости ГРП возвращается'],['вынос песка','контролируют как признак разрушения пачки']],
+ data:['объём обратного притока','вынос песка','давление на устье'],
+ need:['Колтюбинговая установка','Сепаратор и ёмкости'],
+ cam:[28,-12,0,78,.28,1.32],mark:[28,-20,0],
+ labs:[[[0,9.6,0],'Колтюбинг','гибкая труба в скважину'],[[13,5,10],'Барабан гибкой трубы',''],[[16,3.8,-14],'Сепаратор','жидкость и песок'],[[45,-30.6,0],'Долото','разбуривает пробки']]},
+{n:'Добыча',title:'Добыча',win:[85,97],
+ lead:'Флот уезжает, на устье остаётся арматура. Нефть и газ притекают по проницаемой пачке проппанта к стволу и поднимаются на поверхность. Проводимость трещины, то есть качество песка, определяет, сколько даст скважина и как долго продержится дебит.',
+ steps:['Флот демонтируют и вывозят','Нефть и газ идут по порам между зёрнами','Поток по стволу поднимается к устью','Сепаратор делит нефть, газ и воду'],
+ nums:[['мД·м','проводимость трещины'],['до +23,8%','добычи в моделировании для Атырауского региона']],
+ data:['дебит','проводимость','вынос проппанта','обводнённость'],
+ need:['Прочная чистая пачка проппанта'],
+ cam:[18,-10,-4,80,.5,1.2],mark:[20,-18,0],
+ labs:[[[16,3.8,-14],'Сепаратор','нефть · газ · вода'],[[36,-30.6,0],'Приток к стволу','по пачке проппанта'],[[0,6,0],'Устье','в добыче']]}
+];
+const GOVER={title:'ГРП на скважине',
+ lead:'Вся операция на одной кустовой площадке: расстановка флота, перфорация, закачка песка по стадиям, смыкание трещин, освоение и добыча. Справа — поверхность, ниже — горизонтальный ствол в целевом пласте.',
+ legend:[['var(--water)','жидкость разрыва'],['var(--qz)','проппант 20/40'],['#c98b5a','мелкая фракция 100 mesh'],['var(--co)','насосы, пробки, давление'],['var(--amb)','нефть'],['#d8f3ff','газ']],
+ cam:[12,-14,0,100,.42,1.18]};
+const OVER={title:'Производство кварцевого проппанта',
+ lead:'Десять этапов от разведки участка до отгрузки готового песка. Песок идёт по конвейерам слева направо: бурый — сырой, светлый — сухой, дальше — по маркам. Нажмите на любой этап на схеме или запустите тур.',
+ legend:[['var(--wet)','сырой и влажный песок'],['var(--qz)','сухой песок 20/40'],['#e0b46a','марка 40/70'],['#c98b5a','марка 100 mesh'],['var(--water)','оборотная вода'],['#6b4b33','шлам']],
+ cam:[-16,-6,0,215,.1,.84]};
 
 /* ================= ДВИЖОК ================= */
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -287,14 +366,12 @@ let renderer;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}
 catch(e){document.getElementById('chipT').textContent='Браузер не поддерживает WebGL — 3D-сцена недоступна.';return;}
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
-const scene=new THREE.Scene();
-const BGC=0x06131d;scene.background=new THREE.Color(BGC);
-scene.fog=new THREE.FogExp2(BGC,.006);
+const BGC=0x06131d;
+function mkScene(){const s=new THREE.Scene();s.background=new THREE.Color(BGC);s.fog=new THREE.FogExp2(BGC,.006);
+ s.add(new THREE.HemisphereLight(0xa6dcff,0x0b1a24,.75));const sun=new THREE.DirectionalLight(0xfff1dc,1.0);sun.position.set(60,90,50);s.add(sun);
+ const rim=new THREE.DirectionalLight(0x7fe3ff,.35);rim.position.set(-80,40,-60);s.add(rim);return s;}
+let scene=mkScene();
 const cam=new THREE.PerspectiveCamera(40,1,.1,900);
-
-scene.add(new THREE.HemisphereLight(0xa6dcff,0x0b1a24,.75));
-const sun=new THREE.DirectionalLight(0xfff1dc,1.0);sun.position.set(60,90,50);scene.add(sun);
-const rim=new THREE.DirectionalLight(0x7fe3ff,.35);rim.position.set(-80,40,-60);scene.add(rim);
 
 const CY=0x7fe3ff;
 const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.62,metalness:.3},o||{}));
@@ -305,7 +382,7 @@ const WHITE=M(0xd9e4ea,{roughness:.5}), TEAL=M(0x2b6f8a,{roughness:.5});
 const WATER=M(0x2f9ec4,{transparent:true,opacity:.82,emissive:0x0b3a4a,roughness:.15,metalness:.1});
 const PIPE=M(0x3c7f9c,{transparent:true,opacity:.42,depthWrite:false,roughness:.3});
 
-const ups=[];
+let ups=[];
 const V=new THREE.Vector3(), V2=new THREE.Vector3();
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), lerp=(a,b,t)=>a+(b-a)*t, sm=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
@@ -333,7 +410,7 @@ function pts(n,size,o){o=o||{};const g=new THREE.BufferGeometry();g.setAttribute
 function mkPath(arr){const P=arr.map(a=>a.isVector3?a.clone():new THREE.Vector3(...a));const L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+P[i].distanceTo(P[i-1]));return{P,L,T:L[L.length-1]};}
 function at(pa,d,out){d=clamp(d,0,pa.T);let i=1;while(i<pa.L.length-1&&pa.L[i]<d)i++;const s=pa.L[i]-pa.L[i-1]||1;return out.copy(pa.P[i-1]).lerp(pa.P[i],(d-pa.L[i-1])/s);}
 const C=h=>new THREE.Color(h);
-const COL={wet:C(0x9a7448),wet2:C(0x7d5c3a),qz:C(0xefe2c4),f2:C(0xe0b46a),f3:C(0xc98b5a),rej:C(0x6d7a80),water:C(0x3fb0dc),water2:C(0x7fd6f2),slime:C(0x6b4b33),oil:C(0xf2b35b),flame:C(0xffb347),flame2:C(0xff5a2a),smoke:C(0xcfdbe2),bg:C(BGC)};
+const COL={wet:C(0x9a7448),wet2:C(0x7d5c3a),qz:C(0xefe2c4),f2:C(0xe0b46a),f3:C(0xc98b5a),rej:C(0x6d7a80),water:C(0x3fb0dc),water2:C(0x7fd6f2),slime:C(0x6b4b33),oil:C(0xf2b35b),flame:C(0xffb347),flame2:C(0xff5a2a),smoke:C(0xcfdbe2),gas:C(0xd8f3ff),bg:C(BGC)};
 const FR=[COL.qz,COL.f2,COL.f3];
 function setC(arr,i,c){arr[i*3]=c.r;arr[i*3+1]=c.g;arr[i*3+2]=c.b;}
 function setP(arr,i,x,y,z){arr[i*3]=x;arr[i*3+1]=y;arr[i*3+2]=z;}
@@ -626,7 +703,7 @@ const train={x:44};
   const hb=new THREE.Mesh(new THREE.CylinderGeometry(1.6,.5,1,4,1),M(0x6a7e89,{metalness:.5}));hb.rotation.y=Math.PI/4;hb.scale.set(1.3,1,.8);hb.position.set(cx,1,0);tg.add(hb);
   const ld=new THREE.Mesh(new THREE.BoxGeometry(4,.35,2.1),QZM);ld.position.set(cx,2.95,0);tg.add(ld);loads.push(ld);}
  const fall=pts(120,.24);const fa=fall.geometry.attributes.position.array,fc=fall.geometry.attributes.color.array;for(let i=0;i<120;i++)setC(fc,i,FR[i%3]);
- const pneu=[[78,3.4,0],[82,6,-3],[86,7,-6],[88.5,6.6,-7]];pipe(g,pneu,.2,M(0x667480,{transparent:true,opacity:.4,depthWrite:false}));
+ const pneu=[[78,3.4,0],[82,6,-3],[86,9.4,-6],[89.5,9.3,-7]];pipe(g,pneu,.2,M(0x667480,{transparent:true,opacity:.4,depthWrite:false}));
  const pn=flow(mkPath(pneu),60,6,.24,(d,i)=>FR[i%3],.08);
  const CYCL=36;
  ups.push(t=>{const u=t%CYCL;let x,loaded,ldg=false,unl=false;
@@ -635,78 +712,173 @@ const train={x:44};
   fall.visible=ldg;if(ldg){for(let i=0;i<120;i++){const k=i%3,uu=(t*1.8+hash(i))%1;setP(fa,i,SX[k]+(hash(i+2)-.5)*.5,3.5-uu*1.1,(hash(i+4)-.5)*.5);}fall.geometry.attributes.position.needsUpdate=true;}
   pn.on=unl;train.x=x;});
  // водяные ёмкости у куста
- for(let i=0;i<4;i++)box(g,5,2.6,2.2,M(0x3b5f73,{metalness:.4}),82+i*0,1.3,8+i*2.6);
+ [89.5,93.5].forEach(x=>{cyl(g,1.7,1.7,6,M(0xb9c7cf,{metalness:.45,roughness:.4}),x,6,-7,24);cyl(g,1.7,.4,1.4,STEEL,x,2.3,-7,24);[[-1.2,-1.2],[1.2,-1.2],[-1.2,1.2],[1.2,1.2]].forEach(([dx,dz])=>box(g,.2,3,.2,STEEL,x+dx,1.5,-7+dz,false));});
+ box(g,6,2.2,2.3,YEL,91.5,1.3,-2.6);
 }
 
-/* ================= 10 · ФЛОТ ГРП ================= */
-const FRAC_T=20;
-function fracPhase(u){if(u<3)return['Подушка: чистая жидкость раскрывает трещину',0];if(u<6.5)return['Мелкая фракция 100 mesh',Math.round(lerp(60,180,(u-3)/3.5))];if(u<12)return['Основная фракция 20/40',Math.round(lerp(240,600,(u-6.5)/5.5))];if(u<13.5)return['Продавка: песок уходит из ствола в пласт',0];if(u<15)return['Сброс давления: трещина смыкается на песок',0];return['Приток: нефть и газ идут по пачке проппанта',0];}
+/* =====================================================================
+   МИР 2 · ГРП НА СКВАЖИНЕ — отдельная сцена, всё зависит от часов работ JT
+   ===================================================================== */
+const SAND={scene,ups,G};
+scene=mkScene();ups=[];
+const GF=GSTAGES.map(()=>{const g=new THREE.Group();g.userData.lm=new THREE.LineBasicMaterial({color:CY,transparent:true,opacity:.3,depthWrite:false});scene.add(g);return g;});
+let JT=0;const JEND=97;const SK=k=>58+(k-1)*3;
+const FX=[62,52,42,32,22];
+function rateF(t){if(t>=22&&t<51)return sm((t-22)/1.5);for(let k=1;k<5;k++){const s=SK(k);if(t>=s+1&&t<s+2.8)return 1;}return 0;}
+function concF(t){if(t>=30&&t<33.5)return Math.round(lerp(60,180,(t-30)/3.5));if(t>=33.5&&t<44)return 240+Math.min(4,Math.floor((t-33.5)/2.1))*72;
+ for(let k=1;k<5;k++){const s=SK(k);if(t>=s+1.4&&t<s+2.6)return 300;}return 0;}
+function activeK(t){if(t>=22&&t<51)return 0;for(let k=1;k<5;k++){const s=SK(k);if(t>=s+1&&t<s+2.8)return k;}return -1;}
+function fracS(k,t){if(k===0){const o=t<22?0:t<30?.65*sm((t-22.4)/7):t<44?.65+.35*sm((t-30)/14):1;return{o,f:clamp((t-31)/13,0,1),c:sm((t-51)/5)};}
+ const s=SK(k);return{o:sm((t-s-1)/.9),f:clamp((t-s-1.3)/1.5,0,1),c:sm((t-s-2.8)/1)};}
+function presF(t){if(t<22)return .14;if(t<24.5)return lerp(.14,.95,sm((t-22)/2.5));if(t<27)return lerp(.95,.68,sm((t-24.5)/2.5));if(t<44)return .68+.11*(t-27)/17;if(t<51)return lerp(.79,.74,(t-44)/7);
+ if(t<51.4)return lerp(.74,.56,(t-51)/.4);return .36+.2*Math.exp(-(t-51.4)/2.2);}
+function grpPhase(t){if(t<12)return['Расстановка флота на площадке',0];if(t<16.5)return['Перфорация: перфоратор идёт к носку ствола',0];if(t<17.6)return['Отстрел зарядов: каналы в пласт',0];if(t<22)return['Подъём кабеля',0];
+ if(t<30)return['Подушка: давление разрыва, трещина растёт',0];if(t<44)return[t<33.5?'Песок 100 mesh':'Основная фракция',concF(t)];if(t<51)return['Продавка чистой жидкостью',0];if(t<58)return['Остановка: давление падает, трещина смыкается',0];
+ if(t<70){const k=Math.min(4,1+Math.floor((t-58)/3));return['Стадия '+(k+1)+' из 5: пробка → перфорация → закачка',concF(t)];}if(t<73)return['Все 5 стадий выполнены',0];if(t<77)return['Колтюбинг разбуривает пробки',0];if(t<85)return['Освоение: жидкость ГРП возвращается',0];return['Добыча: нефть и газ идут по пачке проппанта',0];}
+
+/* рельеф и площадка */
+{const geo=new THREE.PlaneGeometry(440,320,220,160);geo.rotateX(-Math.PI/2);geo.translate(-10,0,0);
+ const p=geo.attributes.position,cols=new Float32Array(p.count*3),g0=C(0x0c2231),g1=C(0x163447),grid=C(0x1f4a60),pad=C(0x26363f),road=C(0x1a2f3b),c=new THREE.Color();
+ for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);const d=Math.hypot((x+16)/1.25,z);let y=d>78?(Math.sin(x*.05)+Math.sin(z*.08+x*.02)*.8+1.9)*(d-78)*.12:0;p.setY(i,y);
+  if(x>-58&&x<26&&z>-24&&z<22){c.copy(pad).multiplyScalar(.9+hash(i)*.18);}
+  else if(x<=-58&&x>-140&&Math.abs(z)<17)c.copy(road);
+  else{c.copy(g0).lerp(g1,clamp(y/14,0,1)).multiplyScalar(.92+hash(i*3)*.12);if(y<.3){const gx=((x%10)+10)%10,gz=((z%10)+10)%10;if(gx<1||gz<1)c.lerp(grid,.5);}}
+  cols[i*3]=c.r;cols[i*3+1]=c.g;cols[i*3+2]=c.b;}
+ geo.setAttribute('color',new THREE.BufferAttribute(cols,3));geo.computeVertexNormals();
+ scene.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,flatShading:true})));}
+
+/* машины */
+function part(tg,g,geo,mat,x,y,z,edge){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);tg.add(m);if(edge!==false)E(m,g);return m;}
+function rig(g,len,cabMat){const tg=new THREE.Group();g.add(tg);part(tg,g,new THREE.BoxGeometry(len,.5,2.2),DARK,0,.85,0,false);part(tg,g,new THREE.BoxGeometry(1.4,1.7,2.2),cabMat||WHITE,len/2-.7,1.9,0);
+ [len/2-1,-len/2+1.1,-len/2+2.3].forEach(x=>[1,-1].forEach(s=>{const w=part(tg,g,new THREE.CylinderGeometry(.48,.48,.36,12),DARK,x,.48,s,false);w.rotation.x=Math.PI/2;}));return tg;}
+const fleet=[];
+function park(tg,x,z,rot,delay){tg.position.set(x,0,z);fleet.push({tg,x,z,rot,delay});}
 const pumps=[];
-{const g=G[10];
- [87.6,90.6,93.6].forEach((x,k)=>{box(g,2.4,6.4,2.4,M(0x51707f,{metalness:.4}),x,3.5,-7);cyl(g,1.2,.3,.9,STEEL,x,0,-7,4,false).position.y=.2;box(g,2.42,.4,2.42,M([0xefe2c4,0xe0b46a,0xc98b5a][k]),x,5.8,-7,false);});
- beam(g,[86.4,.6,-5.6],[94.8,.6,-5.6],.9,.3,MET);beam(g,[94.8,.6,-5.6],[92.2,2.2,-3.2],.6,.25,MET);
- // блендер
- const bg=new THREE.Group();bg.position.set(91,0,-2.5);g.add(bg);
- const bch=new THREE.Mesh(new THREE.BoxGeometry(7,.5,2.2),DARK);bch.position.y=.8;bg.add(bch);
- const bcab=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.6,2.2),WHITE);bcab.position.set(2.8,1.8,0);bg.add(bcab);E(bcab,g);
- const tub=new THREE.Mesh(new THREE.CylinderGeometry(1,.9,1.2,20),CORM);tub.position.set(0,1.7,0);bg.add(tub);E(tub,g);
- const mix=new THREE.Mesh(new THREE.BoxGeometry(1.6,.1,.2),STEEL);mix.position.set(0,2.35,0);bg.add(mix);
- // манифольд
- box(g,12,.7,1,MET,101,.6,0);
- const mkPump=(x,side)=>{const pg=new THREE.Group();pg.position.set(x,0,side*4.6);pg.rotation.y=side<0?Math.PI/2:-Math.PI/2;g.add(pg);
-  const ch=new THREE.Mesh(new THREE.BoxGeometry(6.4,.5,2.2),DARK);ch.position.y=.85;pg.add(ch);
-  const cab=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.7,2.2),WHITE);cab.position.set(2.5,1.9,0);pg.add(cab);E(cab,g);
-  const eng=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.9,2),CORM);eng.position.set(.4,2,0);pg.add(eng);E(eng,g);
-  const fe=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.2,2),MET);fe.position.set(-2,1.7,0);pg.add(fe);E(fe,g);
-  [[2.2,1],[2.2,-1],[-.6,1],[-.6,-1],[-2.2,1],[-2.2,-1]].forEach(([wx,wz])=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.36,12),DARK);w.rotation.x=Math.PI/2;w.position.set(wx,.48,wz);pg.add(w);});
-  beam(g,[x,1.2,side*1.9],[x,.7,side*.5],.2,.2,STEEL,false);pumps.push(pg);};
- [96.6,99.4,102.2,105].forEach(x=>{mkPump(x,-1);mkPump(x,1);});
- // устье
- const W=[112,0,0];box(g,3,.3,3,CONC,W[0],.15,W[2]);
- [[.6,1.2,1.0],[.45,.9,2.0],[.45,.9,2.9],[.35,.8,3.7]].forEach(([r,h,y])=>cyl(g,r,r,h,STEEL,W[0],y,W[2],16));
- [1.5,2.5,3.3].forEach(y=>{const v=add(g,new THREE.TorusGeometry(.42,.07,6,16),CORM,W[0],y,W[2]+.75,false);});
- box(g,1.6,.5,.9,MET,W[0],4.3,W[2]);
- pipe(g,[[107,.6,0],[109.5,.6,0],[111.2,1.2,0]],.2,STEEL);
- // фургон управления
- box(g,5,2.4,2.4,WHITE,88,1.6,5);box(g,4,.5,.05,M(0x7fe3ff,{emissive:0x3fb0dc}),88,2,6.22,false);
- const FP=mkPath([[91.6,2.2,-2.5],[95,.7,-.2],[107,.7,0],[109.5,.6,0],[112,1.6,0],[112,-3,0]]);
- const fst=flow(FP,220,9,.24,(d,i,v,t)=>{const [,c]=fracPhase(t%FRAC_T);return hash(i)<c/650?FR[c>200?0:2]:COL.water;},.14);
- const lp=new THREE.PointLight(0xff6b57,.0,18);lp.position.set(101,4,0);g.add(lp);
- ups.push(t=>{const u=t%FRAC_T,on=u<13.5;fst.on=on;mix.rotation.y=on?t*8:0;pumps.forEach((p,i)=>{p.position.y=on?Math.sin(t*44+i)*.025:0;});lp.intensity=on?.8+Math.sin(t*9)*.2:0;});
+{const g=GF[0];
+ for(let i=0;i<6;i++){const t=rig(g,7.4,TEAL);part(t,g,new THREE.BoxGeometry(5.6,2.4,2.3),M(0x3b5f73,{metalness:.4}),-.8,2.3,0);park(t,-50,-13+i*3.2,0,i*.3);}
+ const SC=[COL.f3,COL.f2,COL.qz];
+ [-39,-35.5,-32].forEach((x,k)=>{const t=new THREE.Group();g.add(t);part(t,g,new THREE.BoxGeometry(2.6,6.4,2.6),M(0x51707f,{metalness:.4}),0,3.9,0);part(t,g,new THREE.BoxGeometry(2.64,.5,2.64),new THREE.MeshStandardMaterial({color:SC[k]}),0,6.6,0,false);
+  part(t,g,new THREE.CylinderGeometry(1.3,.35,.9,4),STEEL,0,.5,0,false).rotation.y=Math.PI/4;park(t,x,-10.5,0,1+k*.4);});
+ const bl=rig(g,9,WHITE);part(bl,g,new THREE.CylinderGeometry(1.1,.95,1.4,20),CORM,-1.6,1.9,0);const pad2=part(bl,g,new THREE.BoxGeometry(1.8,.1,.2),STEEL,-1.6,2.65,0,false);
+ part(bl,g,new THREE.BoxGeometry(2,1.2,2),MET,1.2,1.7,0);park(bl,-30,-3,0,2.5);
+ const ch=rig(g,7.6,WHITE);const tank=part(ch,g,new THREE.CylinderGeometry(1,1,5,16),M(0x8fa7b3,{metalness:.5}),-1,2.1,0);tank.rotation.z=Math.PI/2;park(ch,-38,5.5,0,3);
+ const dv=rig(g,8,WHITE);part(dv,g,new THREE.BoxGeometry(5.6,2.6,2.4),WHITE,-1,2.4,0);part(dv,g,new THREE.BoxGeometry(4.2,.55,.05),M(0x7fe3ff,{emissive:0x3fb0dc}),-1,2.7,1.23,false);park(dv,-22,14,0,1.2);
+ const mkPump=(x,side,j)=>{const t=rig(g,6.6,WHITE);part(t,g,new THREE.BoxGeometry(2.4,1.9,2),CORM,.3,2,0);part(t,g,new THREE.BoxGeometry(1.6,1.2,2),MET,-2.1,1.7,0);
+  const hose=part(t,g,new THREE.CylinderGeometry(.12,.12,2.2,8),STEEL,-3.9,.75,0,false);hose.rotation.z=Math.PI/2;pumps.push(t);park(t,x,side*5.2,side<0?Math.PI/2:-Math.PI/2,3.4+j*.35);};
+ [-24,-20.5,-17,-13.5,-10].forEach((x,j)=>{mkPump(x,-1,j);mkPump(x,1,j);});
+ const tickF=()=>{const t=JT;fleet.forEach(f=>{let k=1;if(t<12)k=clamp((t-f.delay*.75)/2.6,0,1);else if(t>=86)k=1-clamp((t-86-f.delay*.4)/3.2,0,1);const e=ease(k);
+   f.tg.visible=k>.01;f.tg.position.x=f.x-(1-e)*95;f.tg.rotation.y=f.rot*sm((k-.72)/.28);});
+  const on=rateF(t)>0;pumps.forEach((p,i)=>{p.position.y=on?Math.sin(T*46+i)*.03:0;});pad2.rotation.y=on?T*9:0;};
+ ups.push(tickF);
+ // статичная обвязка
+ box(g,18,.7,1.1,MET,-17,.6,0);pipe(g,[[-8,.6,0],[-1.6,.6,0],[-.6,1.3,0]],.22,STEEL);
+ pipe(g,[[-46,.5,-4],[-36,.5,-1],[-31.6,1.4,-2.4]],.22);pipe(g,[[-28.2,1.1,-3],[-26.4,.6,-.4]],.24,STEEL);
+ beam(g,[-40.4,.75,-8.6],[-31.2,.75,-8.6],.9,.3,MET);beam(g,[-31.2,.75,-8.6],[-31.6,2.8,-4.4],.7,.25,MET);
 }
-
-/* ================= 11 · ПЛАСТ И ТРЕЩИНЫ ================= */
-{const g=G[11];
- const LAY=[[0,-7,0x6b5a48],[-7,-16,0x4b5d6a],[-16,-26,0x5e6f63],[-26,-38,0x2f5266],[-38,-46,0x3b4650]];
- LAY.forEach(([a,b,c],k)=>{const h=a-b;const m=box(g,74,h,30,M(c,{transparent:true,opacity:k===3?.14:.07,depthWrite:false,roughness:1,side:THREE.DoubleSide}),137,(a+b)/2-.05,0);m.renderOrder=-1;});
- const pores=pts(700,.18,{op:.6});{const a=pores.geometry.attributes.position.array,c=pores.geometry.attributes.color.array;for(let i=0;i<700;i++){setP(a,i,101+hash(i)*72,-26.5-hash(i+1)*11,(hash(i+2)-.5)*29);setC(c,i,COL.oil.clone().multiplyScalar(.55));}}
- const cp=new THREE.CurvePath();cp.add(new THREE.LineCurve3(new THREE.Vector3(112,0,0),new THREE.Vector3(112,-22,0)));
- cp.add(new THREE.QuadraticBezierCurve3(new THREE.Vector3(112,-22,0),new THREE.Vector3(112,-32,0),new THREE.Vector3(122,-32,0)));cp.add(new THREE.LineCurve3(new THREE.Vector3(122,-32,0),new THREE.Vector3(164,-32,0)));
- const well=new THREE.Mesh(new THREE.TubeGeometry(cp,160,.45,12,false),M(0x7fe3ff,{transparent:true,opacity:.28,depthWrite:false,emissive:0x0f4a5c}));g.add(well);
- const wp=mkPath(cp.getSpacedPoints(120));
- const FX=[126,136,146,156];const FRS=[],PROP=[];const NP=700;
- FX.forEach((x,j)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(1,56),new THREE.MeshBasicMaterial({color:CY,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
-  m.position.set(x,-32,0);m.rotation.y=Math.PI/2;g.add(m);const rimG=new THREE.BufferGeometry().setFromPoints(Array.from({length:65},(_,i)=>{const a=i/64*Math.PI*2;return new THREE.Vector3(Math.cos(a),Math.sin(a),0);}));
-  const rimL=new THREE.Line(rimG,new THREE.LineBasicMaterial({color:CY,transparent:true,opacity:.8}));m.add(rimL);FRS.push(m);
-  const p=pts(NP,.2);const a=p.geometry.attributes.position.array,c=p.geometry.attributes.color.array;const arr=[];for(let i=0;i<NP;i++){const r=Math.sqrt(hash(i*3.1+j));const an=hash(i*7.7+j*3)*6.28;arr.push([r,an]);}arr.sort((A,B)=>A[0]-B[0]);
-  arr.forEach(([r,an],i)=>{setP(a,i,x+(hash(i+j)-.5)*.3,-32+Math.sin(an)*r*4.3,Math.cos(an)*r*9.2);setC(c,i,r>.82?COL.f3:COL.qz.clone().lerp(COL.f2,hash(i)*.4));});
+const T_=()=>T;
+/* устье, кран, каротаж, колтюбинг */
+const WH=[0,0,0];
+const crane={},wl={},ct={};
+{const g=GF[1];
+ box(g,3,.3,3,CONC,0,.15,0);[[.7,1.2,.9],[.5,1,2],[.45,1,3],[.45,1,4]].forEach(([r,h,y])=>cyl(g,r,r,h,STEEL,0,y,0,16));
+ [1.6,2.6,3.6].forEach(y=>add(g,new THREE.TorusGeometry(.4,.07,6,16),CORM,0,y,.62,false));box(g,1.8,.6,1,MET,0,4.8,0);cyl(g,.35,.35,.5,STEEL,0,5.35,0,12);
+ // кран
+ crane.g=new THREE.Group();g.add(crane.g);const cb=rig(g,9,YEL);g.remove(cb);crane.g.add(cb);cb.position.set(9,0,-7);cb.rotation.y=Math.PI;
+ const bp=new THREE.Group();bp.position.set(8,2.6,-6);bp.rotation.order='YZX';crane.g.add(bp);crane.bp=bp;
+ const bm=new THREE.Mesh(new THREE.BoxGeometry(14.4,.5,.55),YEL);bm.position.x=7.2;bp.add(bm);E(bm,g);
+ crane.cable=box(g,.05,1.6,.05,STEEL,0,12.6,0,false);crane.g.add(crane.cable);
+ crane.lub=cyl(g,.35,.35,6,STEEL,0,8.6,0,14);crane.inj=box(g,1.6,2.4,1.6,CORM,0,7.2,0);
+ crane.goose=add(g,new THREE.TorusGeometry(1.2,.1,6,20,Math.PI),STEEL,-1.2,8.6,0,false);
+ // каротажный подъёмник
+ wl.t=rig(g,8,TEAL);part(wl.t,g,new THREE.BoxGeometry(4.6,2.4,2.3),TEAL,-1.4,2.3,0);wl.t.position.set(12,0,10);
+ wl.line=beam(g,[10.2,2.8,10],[0,11.6,0],.05,.05,STEEL,false);
+ // колтюбинг
+ ct.t=rig(g,9,WHITE);ct.reel=part(ct.t,g,new THREE.CylinderGeometry(1.6,1.6,1.8,24),CORM,-1.6,2.8,0);ct.reel.rotation.x=Math.PI/2;ct.t.position.set(13,0,10);
+ ct.line=beam(g,[11.4,4.4,10],[-2.4,8.6,0],.06,.06,STEEL,false);
+ ups.push(()=>{const t=JT;const cv=t>=9.5&&t<86;crane.g.visible=cv;crane.bp.rotation.set(0,-2.5,lerp(.05,.805,sm((t-9.5)/1.5)));
+  const wlv=(t>=10.5&&t<22)||(t>=57.5&&t<70.5);crane.lub.visible=wlv;crane.cable.visible=wlv||(t>=72.5&&t<85);wl.t.visible=t>=9&&t<71;wl.line.visible=wlv;
+  const ctv=t>=72.5&&t<85.5;crane.inj.visible=ctv;crane.goose.visible=ctv;ct.t.visible=ctv;ct.line.visible=ctv;if(ctv)ct.reel.rotation.y=t*.8;});
+}
+/* сепаратор и ёмкости */
+{const g=GF[7];
+ const sep=cyl(g,1.2,1.2,6,M(0xb9c7cf,{metalness:.45}),16,2.2,-14,20);sep.rotation.z=Math.PI/2;[13.8,18.2].forEach(x=>box(g,.6,1,1.8,STEEL,x,.5,-14,false));
+ [[24,-12.4],[24,-15.8]].forEach(([x,z])=>box(g,5,2.6,2.6,M(0x3b5f73,{metalness:.4}),x,1.3,z));
+ pipe(g,[[.6,1.2,.6],[4,1,-3],[12,1,-11],[12.8,2.2,-14]],.2,STEEL);pipe(g,[[19.2,2.2,-14],[21.4,1.6,-13.4]],.18,STEEL);
+}
+/* недра, ствол, трещины */
+const wellD={};
+{const g=GF[2];
+ [[-.3,-8,0x6b5a48],[-8,-17,0x4b5d6a],[-17,-26,0x5e6f63],[-26,-38,0x2f5266],[-38,-46,0x3b4650]].forEach(([a,b,c],k)=>{const m=box(g,98,a-b,40,M(c,{transparent:true,opacity:k===3?.14:.06,depthWrite:false,roughness:1,side:THREE.DoubleSide}),33,(a+b)/2,0);m.renderOrder=-1;});
+ const pores=pts(900,.18,{op:.6});{const a=pores.geometry.attributes.position.array,c=pores.geometry.attributes.color.array;for(let i=0;i<900;i++){setP(a,i,-14+hash(i)*95,-26.5-hash(i+1)*11,(hash(i+2)-.5)*39);setC(c,i,COL.oil.clone().multiplyScalar(.5));}}
+ const cp=new THREE.CurvePath();cp.add(new THREE.LineCurve3(new THREE.Vector3(0,.4,0),new THREE.Vector3(0,-20,0)));
+ cp.add(new THREE.QuadraticBezierCurve3(new THREE.Vector3(0,-20,0),new THREE.Vector3(0,-32,0),new THREE.Vector3(12,-32,0)));cp.add(new THREE.LineCurve3(new THREE.Vector3(12,-32,0),new THREE.Vector3(70,-32,0)));
+ g.add(new THREE.Mesh(new THREE.TubeGeometry(cp,200,.5,12,false),M(0x7fe3ff,{transparent:true,opacity:.26,depthWrite:false,emissive:0x0f4a5c})));
+ const wp=mkPath(cp.getSpacedPoints(260));wellD.wp=wp;
+ const dX=x=>{let b=0,bd=1e9;for(let i=0;i<wp.P.length;i++){const dd=Math.abs(wp.P[i].x-x)+Math.abs(wp.P[i].y+32);if(dd<bd){bd=dd;b=wp.L[i];}}return b;};
+ const DF=FX.map(dX),DP=FX.map(x=>dX(x+5)),DTOE=dX(66);
+ const iOf=d=>{let i=0;while(i<wp.L.length-1&&wp.L[i]<d)i++;return i;};
+ const lineG=new THREE.BufferGeometry().setFromPoints(wp.P);
+ const cable=new THREE.Line(lineG,new THREE.LineBasicMaterial({color:0xcfdbe2}));g.add(cable);
+ const ctl=new THREE.Line(lineG,new THREE.LineBasicMaterial({color:0xff6b57}));g.add(ctl);
+ const gunG=new THREE.CylinderGeometry(.3,.3,2.6,12);gunG.rotateX(Math.PI/2);const gun=new THREE.Mesh(gunG,M(0x9aa9b2,{emissive:0x332211,metalness:.7}));g.add(gun);E(gun,g);
+ const bitG=new THREE.ConeGeometry(.42,1.2,12);bitG.rotateX(Math.PI/2);const bit=new THREE.Mesh(bitG,CORM);g.add(bit);
+ const plugs=[];for(let k=1;k<5;k++){const m=cyl(g,.46,.46,.7,CORM,FX[k]+5,-32,0,14,false);m.rotation.z=Math.PI/2;plugs.push(m);}
+ // трещины
+ const NP=800,FRS=[],PROP=[];
+ FX.forEach((x,j)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(1,56),new THREE.MeshBasicMaterial({color:CY,transparent:true,opacity:.24,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
+  m.position.set(x,-32,0);m.rotation.y=Math.PI/2;g.add(m);m.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:65},(_,i)=>{const a=i/64*Math.PI*2;return new THREE.Vector3(Math.cos(a),Math.sin(a),0);})),new THREE.LineBasicMaterial({color:CY,transparent:true,opacity:.85})));FRS.push(m);
+  const p=pts(NP,.2);const a=p.geometry.attributes.position.array,c=p.geometry.attributes.color.array;const arr=[];for(let i=0;i<NP;i++)arr.push([Math.sqrt(hash(i*3.1+j*.7)),hash(i*7.7+j*3)*6.28]);arr.sort((A,B)=>A[0]-B[0]);
+  arr.forEach(([r,an],i)=>{setP(a,i,x+(hash(i+j)-.5)*.35,-32+Math.sin(an)*r*5*(1-.25*Math.max(0,Math.sin(an))),Math.cos(an)*r*10.5);setC(c,i,r>.84?COL.f3:COL.qz.clone().lerp(COL.f2,hash(i)*.4));});
   p.geometry.setDrawRange(0,0);PROP.push(p);});
- // нефть
- const NO=360,oil=pts(NO,.26,{add:true});const oa=oil.geometry.attributes.position.array,oc=oil.geometry.attributes.color.array;const OS=[];
- for(let i=0;i<NO;i++){const j=i%4,r=Math.sqrt(hash(i*1.3))*.95,an=hash(i*2.9)*6.28;OS.push([j,Math.sin(an)*r*4.3,Math.cos(an)*r*9.2,hash(i*5.1)]);setC(oc,i,COL.oil);}
- const dEnt=FX.map(x=>{let best=0,bd=1e9;for(let i=0;i<wp.P.length;i++){const dd=Math.abs(wp.P[i].x-x)+Math.abs(wp.P[i].y+32);if(dd<bd){bd=dd;best=wp.L[i];}}return best;});
- // стрелки давления смыкания
- const arrows=[];[1,-1].forEach(s=>{const ag=new THREE.Group();const sh=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,2.4,10),CORM);const hd=new THREE.Mesh(new THREE.ConeGeometry(.5,1,12),CORM);hd.position.y=-1.6;hd.rotation.x=Math.PI;ag.add(sh,hd);ag.rotation.z=s>0?0:Math.PI;ag.userData.s=s;g.add(ag);arrows.push(ag);});
- const inj=flow(wp,160,14,.26,(d,i,v,t)=>{const [,c]=fracPhase(t%FRAC_T);return hash(i)<c/650?COL.qz:COL.water;},.12);
- ups.push(t=>{const u=t%FRAC_T;inj.on=u<13.5;
-  FRS.forEach((m,j)=>{const ord=3-j;const s=u<13.5?sm((u-.4-ord*.7)/1.4):1;let sc=.04+.96*s;m.scale.set(9.2*sc,4.3*sc,1);
-   m.material.opacity=u<13.5?.24:lerp(.24,.08,sm((u-13.5)/1.5));m.material.color.setHex(u<13.5?CY:0xbfe8f2);
-   const pr=u<15?clamp((u-3-ord*.45)/8,0,1):1;PROP[j].geometry.setDrawRange(0,Math.floor(NP*pr*s));});
-  arrows.forEach(a=>{const vis=u>13.2&&u<16.2;a.visible=vis;const k=sm((u-13.2)/1.4);a.position.set(136,-32+a.userData.s*(8.2-k*2.4),9.8);});
-  oil.visible=u>=15;if(u>=15){const k=(u-15)/5;for(let i=0;i<NO;i++){const [j,y0,z0,ph]=OS[i];const p=(k*1.4+ph)%1;let x,y,z;
-    if(p<.5){const q=sm(p/.5);x=FX[j];y=-32+y0*(1-q);z=z0*(1-q);}else{const q=(p-.5)/.5;at(wp,dEnt[j]-q*(dEnt[j]*.55),V);x=V.x;y=V.y;z=V.z;}
-    setP(oa,i,x,y,z);}oil.geometry.attributes.position.needsUpdate=true;}});
+ // жидкость в растущей трещине
+ const NF=300,fl=pts(NF,.22,{add:true});const fa=fl.geometry.attributes.position.array,fc=fl.geometry.attributes.color.array;
+ // вспышки перфорации
+ const NB=160,fb=pts(NB,.34,{add:true});const ba=fb.geometry.attributes.position.array,bc=fb.geometry.attributes.color.array;const tc=new THREE.Color();
+ // закачка вниз по стволу
+ const NI=280,inj=pts(NI,.26);const ia=inj.geometry.attributes.position.array,ic=inj.geometry.attributes.color.array;
+ // обратный приток и добыча
+ const NU=320,upP=pts(NU,.26,{add:true});const ua=upP.geometry.attributes.position.array,uc=upP.geometry.attributes.color.array;
+ const NO=420,oil=pts(NO,.26,{add:true});const oa=oil.geometry.attributes.position.array,oc=oil.geometry.attributes.color.array;const OS=[];
+ for(let i=0;i<NO;i++){const r=Math.sqrt(hash(i*1.3))*.95,an=hash(i*2.9)*6.28;OS.push([i%5,Math.sin(an)*r*5,Math.cos(an)*r*10.5,hash(i*5.1)]);setC(oc,i,hash(i*9)<.3?COL.gas:COL.oil);}
+ const arrows=[];[1,-1].forEach(s=>{const ag=new THREE.Group();const sh=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,2.6,10),CORM);const hd=new THREE.Mesh(new THREE.ConeGeometry(.55,1.1,12),CORM);hd.position.y=-1.8;hd.rotation.x=Math.PI;ag.add(sh,hd);ag.rotation.z=s>0?0:Math.PI;ag.userData.s=s;g.add(ag);arrows.push(ag);});
+ ups.push((t0)=>{const t=JT;
+  // перфоратор и кабель
+  let gd=-1;if(t>=12&&t<22){gd=t<15.5?DF[0]*ease((t-12)/3.5):t<18?DF[0]:DF[0]*(1-ease((t-18)/4));}
+  for(let k=1;k<5;k++){const s=SK(k);if(t>=s-.4&&t<s+1.1)gd=DF[k];}
+  gun.visible=gd>0;cable.visible=gd>0;if(gd>0){at(wp,gd,V);gun.position.copy(V);at(wp,gd+1,V2);gun.lookAt(V2);cable.geometry.setDrawRange(0,iOf(gd));}
+  // пробки и долото
+  const bd=t>=73&&t<85?DTOE*clamp((t-73.5)/9,0,1):-1;bit.visible=bd>0;ctl.visible=bd>0;if(bd>0){at(wp,bd,V);bit.position.copy(V);at(wp,bd+1,V2);bit.lookAt(V2);ctl.geometry.setDrawRange(0,iOf(bd));}
+  plugs.forEach((m,i)=>{const k=i+1;m.visible=t>=SK(k)+.4&&!(t>=73&&(bd>DP[k]||t>=85));});
+  // трещины
+  FRS.forEach((m,k)=>{const s=fracS(k,t);m.visible=s.o>.01;const sc=.03+.97*s.o;m.scale.set(10.5*sc,5*sc,1);m.material.opacity=.26-.16*s.c;m.material.color.setHex(s.c>.5?0xbfe8f2:CY);
+   PROP[k].geometry.setDrawRange(0,Math.floor(NP*s.f*Math.min(1,s.o*1.4)));});
+  // жидкость в трещине
+  const ak=activeK(t),c=concF(t);fl.visible=ak>=0;if(ak>=0){const s=fracS(ak,t);for(let i=0;i<NF;i++){const u=(T*.6+hash(i))%1,an=hash(i*2.3)*6.28,r=u*s.o;setP(fa,i,FX[ak]+(hash(i+3)-.5)*.3,-32+Math.sin(an)*r*5,Math.cos(an)*r*10.5);
+    tc.copy(hash(i)<c/600?COL.qz:COL.water).multiplyScalar(1-u*.6);setC(fc,i,tc);}fl.geometry.attributes.position.needsUpdate=true;fl.geometry.attributes.color.needsUpdate=true;}
+  // вспышки
+  let pk=-1,pu=0;if(t>=16.5&&t<17.6){pk=0;pu=(t-16.5)/1.1;}for(let k=1;k<5;k++){const s=SK(k);if(t>=s+.6&&t<s+1){pk=k;pu=(t-s-.6)/.4;}}
+  fb.visible=pk>=0;if(pk>=0){for(let i=0;i<NB;i++){const cl=i%4,an=hash(i)*6.28,r=.5+pu*(1.5+hash(i+1)*2.5);setP(ba,i,FX[pk]-1.5+cl+(hash(i+2)-.5)*.3,-32+Math.sin(an)*r,Math.cos(an)*r);tc.copy(COL.flame).lerp(COL.flame2,pu).multiplyScalar(1-pu*.8);setC(bc,i,tc);}
+   fb.geometry.attributes.position.needsUpdate=true;fb.geometry.attributes.color.needsUpdate=true;}
+  // закачка
+  const rt=rateF(t);inj.visible=rt>0&&ak>=0;if(inj.visible){const dm=DF[ak];for(let i=0;i<NI;i++){const d=(T*18+i/NI*dm)%dm;at(wp,d,V);setP(ia,i,V.x+(hash(i)-.5)*.3,V.y+(hash(i+1)-.5)*.3,V.z+(hash(i+2)-.5)*.3);setC(ic,i,hash(i)<c/600?COL.qz:COL.water);}
+   inj.geometry.attributes.position.needsUpdate=true;inj.geometry.attributes.color.needsUpdate=true;}
+  // стрелки смыкания
+  arrows.forEach(a=>{const v=t>=50.6&&t<58;a.visible=v;const k=sm((t-50.6)/2.4);a.position.set(FX[0],-32+a.userData.s*(9.2-k*3),11.6);});
+  // обратный приток / добыча по стволу
+  const fbk=t>=77&&t<85,prod=t>=85;upP.visible=fbk||prod;if(upP.visible){for(let i=0;i<NU;i++){const d=DTOE*(1-((T*.09+i/NU)%1));at(wp,d,V);setP(ua,i,V.x+(hash(i)-.5)*.3,V.y+(hash(i+1)-.5)*.3,V.z+(hash(i+2)-.5)*.3);
+    setC(uc,i,fbk?(hash(i)<.18?COL.qz:COL.water):(hash(i*7)<.3?COL.gas:COL.oil));}upP.geometry.attributes.position.needsUpdate=true;upP.geometry.attributes.color.needsUpdate=true;}
+  oil.visible=prod;if(prod){const k=(t-85)/12;for(let i=0;i<NO;i++){const [j,y0,z0,ph]=OS[i];const q=sm((k*5+ph)%1);setP(oa,i,FX[j]+(hash(i)-.5)*.3,-32+y0*(1-q),z0*(1-q));}oil.geometry.attributes.position.needsUpdate=true;}
+ });
 }
+/* потоки на поверхности */
+{const g=GF[3];
+ const slurry=flow(mkPath([[-31.6,2,-3],[-28.2,1.1,-3],[-26.4,.7,-.3],[-8,.7,0],[-1.6,.7,0],[-.6,1.4,0]]),240,10,.26,(d,i)=>hash(i)<concF(JT)/600?(JT<33.5?COL.f3:COL.qz):COL.water,.18);
+ const water=flow(mkPath([[-46,.6,-4],[-36,.6,-1],[-31.6,1.5,-2.4]]),80,6,.24,()=>COL.water,.14);
+ const sand=flow(mkPath([[-39,1.1,-8.6],[-31.2,1.1,-8.6],[-31.6,3.1,-4.4],[-31.6,2.2,-3]]),90,4,.26,(d,i)=>JT<33.5||JT>=58?COL.f3:COL.qz,.25);
+ const back=flow(mkPath([[.6,1.2,.6],[4,1,-3],[12,1,-11],[12.8,2.2,-14],[19.2,2.2,-14],[21.4,1.6,-13.4]]),120,6,.26,(d,i)=>JT>=85?(hash(i*7)<.3?COL.gas:COL.oil):(hash(i)<.15?COL.qz:COL.water),.12);
+ ups.push(()=>{const r=rateF(JT)>0;slurry.on=r;water.on=r;sand.on=r&&concF(JT)>0;back.on=JT>=77;});
+}
+const GRPW={scene,ups,G:GF};
 
 /* ================= КАМЕРА ================= */
 const camS={t:new THREE.Vector3(0,0,0),r:240,th:.16,ph:.8};
@@ -719,53 +891,73 @@ function stepCam(dt){if(tw){const e=clamp((performance.now()-tw.s)/tw.dur,0,1),k
   camS.t.lerpVectors(f.t,o.t,k);camS.r=lerp(f.r,o.r,k)+b*tw.bump;camS.th=lerp(f.th,o.th,k);camS.ph=lerp(f.ph,o.ph,k)-b*Math.min(.25,tw.bump/240);if(e>=1)tw=null;}
  else if(playing&&!dragging&&!RM){camS.th+=dt*.022;}
  const sp=Math.sin(camS.ph);cam.position.set(camS.t.x+camS.r*sp*Math.sin(camS.th),camS.t.y+camS.r*Math.cos(camS.ph),camS.t.z+camS.r*sp*Math.cos(camS.th));cam.lookAt(camS.t);
- scene.fog.density=.5/Math.max(camS.r,22);}
+ MODE.w.scene.fog.density=.5/Math.max(camS.r,22);}
+
+/* ================= РЕЖИМЫ ================= */
+const MODES={
+ pesok:{key:'pesok',name:'Производство песка',stages:STAGES,over:OVER,w:SAND,unit:'Этап',
+  note:'Схема условная: состав и число аппаратов зависят от сырья месторождения. Нормы — по ISO 13503-2 и API RP 19C; пределы раздавливания даны как ориентир по API RP 56.',other:'grp',otherT:'Дальше: ГРП на скважине →'},
+ grp:{key:'grp',name:'ГРП на скважине',stages:GSTAGES,over:GOVER,w:GRPW,unit:'Шаг',
+  note:'Схема условная: число насосов, стадий и график закачки зависят от дизайна ГРП конкретной скважины. Кривые на графике иллюстрируют форму, это не данные реальной работы.',other:'pesok',otherT:'← Как делают песок'}};
+let MODE=MODES.pesok;
 
 /* ================= ИНТЕРФЕЙС ================= */
 const $=id=>document.getElementById(id);
 const pbody=$('pbody'),panel=$('panel'),bar=$('stepsBar'),chipT=$('chipT'),labsEl=$('labs');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-STAGES.forEach((s,i)=>{const b=document.createElement('button');b.className='step';b.type='button';b.innerHTML=`<b>${String(i+1).padStart(2,'0')}</b><span>${esc(s.n)}</span>`;b.addEventListener('click',()=>{go(i);});bar.appendChild(b);s.btn=b;});
-// выноски
-STAGES.forEach((s,i)=>{s.lab=s.labs.map(([p,t,sub])=>{const d=document.createElement('div');d.className='co';d.innerHTML=`<i class="dot"></i><i class="stem"></i><div class="box"><b>${esc(t)}</b><small>${esc(sub)}</small></div>`;labsEl.appendChild(d);return{el:d,p:new THREE.Vector3(...p)};});
- const pl=document.createElement('button');pl.className='pill';pl.type='button';pl.innerHTML=`<b>${i+1}</b>${esc(s.n)}`;pl.addEventListener('click',()=>go(i));labsEl.appendChild(pl);s.pill={el:pl,p:new THREE.Vector3(...s.mark)};});
+Object.values(MODES).forEach(md=>md.stages.forEach((s,i)=>{
+ s.lab=s.labs.map(([p,t,sub])=>{const d=document.createElement('div');d.className='co';d.innerHTML=`<i class="dot"></i><i class="stem"></i><div class="box"><b>${esc(t)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div>`;labsEl.appendChild(d);return{el:d,p:new THREE.Vector3(...p)};});
+ const pl=document.createElement('button');pl.className='pill';pl.type='button';pl.innerHTML=`<b>${i+1}</b>${esc(s.n)}`;pl.addEventListener('click',()=>go(i));labsEl.appendChild(pl);s.pill={el:pl,p:new THREE.Vector3(...s.mark)};}));
+function buildBar(){bar.innerHTML='';MODE.stages.forEach((s,i)=>{const b=document.createElement('button');b.className='step';b.type='button';b.innerHTML=`<b>${String(i+1).padStart(2,'0')}</b><span>${esc(s.n)}</span>`;b.addEventListener('click',()=>go(i));bar.appendChild(b);s.btn=b;});}
 
-function renderPanel(i){let h;
- if(i<0){h=`<div class="eyebrow"><span class="n">∑</span>Обзор · 12 этапов</div><h1>${OVER.title}</h1><p class="lead">${OVER.lead}</p>
-  <div class="more"><div class="sect">Что течёт по линиям</div><div class="legend">${OVER.legend.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('')}</div>
-  <div class="sect">Маршрут</div><ol class="steps">${STAGES.map(s=>`<li>${esc(s.title)}</li>`).join('')}</ol>
-  <p class="note" style="border-left-color:var(--cy);background:rgba(127,227,255,.06)">Схема условная: состав и число аппаратов зависят от сырья месторождения. Нормы — по ISO 13503-2 и API RP 19C; пределы раздавливания даны как ориентир по API RP 56.</p></div>`;}
- else{const s=STAGES[i];h=`<div class="eyebrow"><span class="n">${i+1}</span>Этап ${i+1} из ${STAGES.length}</div><h1>${esc(s.title)}</h1><p class="lead">${esc(s.lead)}</p>
+function chartHTML(){return `<div class="chart"><div class="chl"><span style="--c:var(--co)">давление</span><span style="--c:var(--cy)">расход</span><span style="--c:var(--qz)">песок</span></div><canvas id="chartC" aria-label="График закачки первой стадии"></canvas><div class="chn">Одна стадия, условные единицы</div></div>`;}
+function renderPanel(i){let h;const md=MODE,ST=md.stages,G2=md.key==='grp';
+ if(i<0){const o=md.over;h=`<div class="eyebrow"><span class="n">∑</span>Обзор · ${ST.length} ${md.key==='grp'?'шагов':'этапов'}</div><h1>${o.title}</h1><p class="lead">${o.lead}</p>
+  ${G2?chartHTML():''}
+  <div class="more"><div class="sect">Что течёт по линиям</div><div class="legend">${o.legend.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('')}</div>
+  <div class="sect">Маршрут</div><ol class="steps">${ST.map(s=>`<li>${esc(s.title)}</li>`).join('')}</ol>
+  <p class="note" style="border-left-color:var(--cy);background:rgba(127,227,255,.06)">${md.note}</p>
+  <button class="btn cta" type="button" data-sw="${md.other}">${md.otherT}</button></div>`;}
+ else{const s=ST[i];h=`<div class="eyebrow"><span class="n">${i+1}</span>${md.unit} ${i+1} из ${ST.length}</div><h1>${esc(s.title)}</h1><p class="lead">${esc(s.lead)}</p>
+  ${G2&&i>=2&&i<=5?chartHTML():''}
   <div class="more"><div class="sect">Что происходит</div><ol class="steps">${s.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>
   <div class="sect">Цифры</div><div class="nums">${s.nums.map(([v,l])=>`<div class="num"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('')}</div>
   <div class="sect">Что измеряют</div><div class="tags">${s.data.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>
   <div class="sect">Что нужно</div><div class="tags">${s.need.map(x=>`<span class="tag n">${esc(x)}</span>`).join('')}</div>
-  ${s.note?`<p class="note">${esc(s.note)}</p>`:''}</div>`;}
- pbody.innerHTML=`<div class="pfade">${h}</div>`;pbody.scrollTop=0;}
+  ${s.note?`<p class="note">${esc(s.note)}</p>`:''}
+  ${i===ST.length-1?`<button class="btn cta" type="button" data-sw="${md.other}">${md.otherT}</button>`:''}</div>`;}
+ pbody.innerHTML=`<div class="pfade">${h}</div>`;pbody.scrollTop=0;
+ const sw=pbody.querySelector('[data-sw]');if(sw)sw.onclick=()=>setMode(sw.dataset.sw,-1);}
 
-function go(i,o){o=o||{};if(i>=STAGES.length)i=-1;cur=i;dwell=0;
- fly(i<0?OVER.cam:STAGES[i].cam,o.dur);renderPanel(i);
- STAGES.forEach((s,k)=>{s.btn.setAttribute('aria-current',k===i?'step':'false');s.btn.classList.toggle('done',i>=0&&k<i);s.btn.style.setProperty('--p',k<i&&i>=0?1:0);});
+function go(i,o){o=o||{};const ST=MODE.stages;if(i>=ST.length)i=-1;cur=i;dwell=0;
+ if(MODE.key==='grp'&&i>=0){const [a,b]=ST[i].win;if(!(JT>=a&&JT<b))JT=a;}
+ fly(i<0?MODE.over.cam:ST[i].cam,o.dur);renderPanel(i);
+ ST.forEach((s,k)=>{s.btn.setAttribute('aria-current',k===i?'step':'false');s.btn.classList.toggle('done',i>=0&&k<i);s.btn.style.setProperty('--p',k<i&&i>=0?1:0);});
  $('bOver').setAttribute('aria-pressed',String(i<0));
- if(i>=0){const b=STAGES[i].btn;bar.scrollTo({left:b.offsetLeft-bar.clientWidth/2+b.offsetWidth/2,behavior:RM?'auto':'smooth'});}
- try{history.replaceState(null,'',i<0?'#obzor':'#etap-'+(i+1));}catch(e){}}
+ if(i>=0){const b=ST[i].btn;bar.scrollTo({left:b.offsetLeft-bar.clientWidth/2+b.offsetWidth/2,behavior:RM?'auto':'smooth'});}
+ try{history.replaceState(null,'','#'+MODE.key+(i<0?'':'-'+(i+1)));}catch(e){}}
+function setMode(key,i,instant){MODE=MODES[key];document.querySelectorAll('.modes button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.m===key)));
+ document.querySelectorAll('.co,.pill').forEach(e=>e.classList.remove('on'));buildBar();lastChip='';if(key==='grp'&&i<0)JT=0;
+ const k=i>=0?MODE.stages[i].cam:MODE.over.cam;camS.t.set(k[0],k[1],k[2]);camS.r=k[3]*rf()*(instant?1.6:1.35);camS.th=k[4]-.6;camS.ph=k[5]-.22;tw=null;
+ go(i,{dur:3});dwell=0;}
+document.querySelectorAll('.modes button').forEach(b=>b.addEventListener('click',()=>{if(MODE.key!==b.dataset.m)setMode(b.dataset.m,-1);}));
 function setPlay(p){playing=p;$('bPlay').setAttribute('aria-label',p?'Пауза':'Смотреть тур');$('playIco').innerHTML=p?'<path d="M7 5h3v14H7zM14 5h3v14h-3z"/>':'<path d="M7 4l13 8-13 8z"/>';}
 $('bPlay').onclick=()=>{setPlay(!playing);if(playing&&!tw)dwell=Math.min(dwell,DWELL-1);};
-const prev=()=>go(cur<=0?(cur<0?STAGES.length-1:-1):cur-1), next=()=>go(cur+1);
+const prev=()=>{const n=MODE.stages.length;go(cur<=0?(cur<0?n-1:-1):cur-1);}, next=()=>go(cur+1);
 $('bPrev').onclick=prev;$('bNext').onclick=next;$('bPrev2').onclick=prev;$('bNext2').onclick=next;
 $('bOver').onclick=()=>go(-1);
 const SPEEDS=[1,2,.5];$('bSpeed').onclick=()=>{SPEED=SPEEDS[(SPEEDS.indexOf(SPEED)+1)%3];$('bSpeed').textContent=(SPEED===.5?'0,5':SPEED)+'×';};
 $('bFull').onclick=()=>{const d=document;try{if(d.fullscreenElement)d.exitFullscreen();else{const p=d.documentElement.requestFullscreen&&d.documentElement.requestFullscreen();if(p&&p.catch)p.catch(()=>{});}}catch(e){}};
-$('bMin').onclick=()=>{const m=panel.classList.toggle('min');$('bMin').textContent=m?'Подробнее':'Свернуть';$('bMin').setAttribute('aria-expanded',String(!m));resize();};
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){next();}else if(e.key==='ArrowLeft'){prev();}else if(e.key===' '&&e.target===document.body||e.key===' '&&e.target===canvas){e.preventDefault();$('bPlay').click();}else if(e.key==='o'||e.key==='щ'){go(-1);}else if(e.key==='f'||e.key==='а'){$('bFull').click();}});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){next();}else if(e.key==='ArrowLeft'){prev();}else if(e.key===' '&&(e.target===document.body||e.target===canvas)){e.preventDefault();$('bPlay').click();}else if(e.key==='o'||e.key==='щ'){go(-1);}else if(e.key==='f'||e.key==='а'){$('bFull').click();}});
 
 /* управление камерой */
 const ptrs=new Map();let pinch0=0,r0=0,moved=0;
+const isUnder=()=>MODE.key==='grp'?(cur<0||cur===1||cur>=2&&cur!==3):false;
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);r0=camS.r;}});
 canvas.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
  if(moved>4&&!dragging){dragging=true;canvas.classList.add('drag');tw=null;if(playing)setPlay(false);userTouched=true;$('hint').style.opacity=0;}
  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)camS.r=clamp(r0*pinch0/d,8,340);return;}
- if(dragging){camS.th-=dx*.0055;if(e.pointerType!=='touch')camS.ph=clamp(camS.ph-dy*.0045,.18,cur===11?1.75:1.52);}});
+ if(dragging){camS.th-=dx*.0055;if(e.pointerType!=='touch')camS.ph=clamp(camS.ph-dy*.0045,.18,isUnder()?1.8:1.52);}});
 const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;if(!ptrs.size){dragging=false;canvas.classList.remove('drag');}};
 canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
 canvas.addEventListener('wheel',e=>{e.preventDefault();tw=null;camS.r=clamp(camS.r*Math.exp(e.deltaY*.0012),8,340);},{passive:false});
@@ -781,29 +973,47 @@ addEventListener('resize',resize);
 /* выноски */
 const PV=new THREE.Vector3();
 function proj(p){PV.copy(p).project(cam);return{x:(PV.x*.5+.5)*W,y:(-PV.y*.5+.5)*Hh,ok:PV.z<1&&PV.z>-1};}
-function updLabels(){const show=!tw;STAGES.forEach((s,i)=>{const act=i===cur&&show;s.lab.forEach(l=>{if(!act){l.el.classList.remove('on');return;}const q=proj(l.p);const vis=q.ok&&q.x>10&&q.x<W-10&&q.y>120&&q.y<Hh-90;l.el.classList.toggle('on',vis);l.el.classList.toggle('l',q.x>W*.72);l.el.style.transform=`translate(${q.x.toFixed(1)}px,${q.y.toFixed(1)}px)`;});
+function updLabels(){const show=!tw;MODE.stages.forEach((s,i)=>{const act=i===cur&&show;s.lab.forEach(l=>{if(!act){l.el.classList.remove('on');return;}const q=proj(l.p);const vis=q.ok&&q.x>10&&q.x<W-10&&q.y>120&&q.y<Hh-90;l.el.classList.toggle('on',vis);l.el.classList.toggle('l',q.x>W*.72);l.el.style.transform=`translate(${q.x.toFixed(1)}px,${q.y.toFixed(1)}px)`;});
   const po=cur<0&&show;const q=proj(s.pill.p);s.pill.el.classList.toggle('on',po&&q.ok);if(po)s.pill.el.style.transform=`translate(${q.x.toFixed(1)}px,${q.y.toFixed(1)}px) translate(-50%,-100%)`;});}
 
 /* подсветка активного этапа */
-function updHi(dt){G.forEach((g,i)=>{const tgt=cur<0?.5:i===cur?.95:.18;const m=g.userData.lm;m.opacity+= (tgt-m.opacity)*Math.min(1,dt*3);});}
+function updHi(dt){MODE.w.G.forEach((g,i)=>{const tgt=cur<0?.5:i===cur?.95:.18;const m=g.userData.lm;m.opacity+= (tgt-m.opacity)*Math.min(1,dt*3);});}
 
 /* фаза */
 let lastChip='';
-function updChip(t){let s;if(cur===10||cur===11){const [ph,c]=fracPhase(t%FRAC_T);s=`<span>${ph}</span>`+(c?` · <em>песок ~${c} кг/м³</em>`:'');}
- else if(cur<0)s='<span>Весь цикл: 12 этапов, от недр до трещины</span>';else s=`<span>${STAGES[cur].state}</span>`;if(s!==lastChip){chipT.innerHTML=s;lastChip=s;}}
+function updChip(){let s;
+ if(MODE.key==='grp'){const [ph,c]=grpPhase(JT);s=`<span>${ph}</span>`+(c?` · <em>песок ~${c} кг/м³</em>`:'');}
+ else if(cur<0)s='<span>Производство: 10 этапов, от недр до отгрузки</span>';else s=`<span>${STAGES[cur].state}</span>`;
+ if(s!==lastChip){chipT.innerHTML=s;lastChip=s;}}
+
+/* живой график стадии */
+function drawChart(){const cv=document.getElementById('chartC');if(!cv)return;const dpr=Math.min(devicePixelRatio||1,2),w=cv.clientWidth,h=cv.clientHeight;if(!w)return;
+ if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+ const t0=20,t1=58,X=t=>(t-t0)/(t1-t0)*(w-8)+4,Y=v=>h-6-v*(h-14);const now=MODE.key==='grp'&&JT<t1+.01?JT:t1;
+ x.strokeStyle='rgba(127,227,255,.1)';x.lineWidth=1;[.25,.5,.75].forEach(v=>{x.beginPath();x.moveTo(4,Y(v));x.lineTo(w-4,Y(v));x.stroke();});
+ [[30,'песок'],[44,'продавка'],[51,'стоп']].forEach(([t,l])=>{x.strokeStyle='rgba(143,176,194,.25)';x.setLineDash([3,3]);x.beginPath();x.moveTo(X(t),6);x.lineTo(X(t),h-4);x.stroke();x.setLineDash([]);x.fillStyle='#8fb0c2';x.font='10px "Golos Text",system-ui';x.fillText(l,X(t)+3,13);});
+ const css=getComputedStyle(document.documentElement);
+ const S=[[t=>concF(t)/600,css.getPropertyValue('--qz')],[rateF,css.getPropertyValue('--cy')],[presF,css.getPropertyValue('--co')]];
+ S.forEach(([f,c])=>{for(const past of [false,true]){x.beginPath();x.strokeStyle=c.trim();x.globalAlpha=past?1:.22;x.lineWidth=past?2:1.5;let first=true;const e=past?Math.min(now,t1):t1;
+   for(let t=t0;t<=e;t+=.12){const v=f(t);if(first){x.moveTo(X(t),Y(v));first=false;}else x.lineTo(X(t),Y(v));}x.stroke();}});x.globalAlpha=1;
+ if(now<t1&&now>t0){x.strokeStyle='#e6f1f7';x.lineWidth=1;x.beginPath();x.moveTo(X(now),4);x.lineTo(X(now),h-4);x.stroke();x.fillStyle='#ff6b57';x.beginPath();x.arc(X(now),Y(presF(now)),3.2,0,7);x.fill();}}
 
 /* цикл */
 const clock=new THREE.Clock();let T=0;
-function frame(){const dt=Math.min(clock.getDelta(),.05);const sdt=RM?dt*.4:dt*SPEED;T+=sdt;
- for(let i=0;i<ups.length;i++)ups[i](T,sdt);
+function frame(){const dt=Math.min(clock.getDelta(),.05);const sdt=RM?dt*.4:dt*SPEED;T+=sdt;const w=MODE.w;
+ if(MODE.key==='grp'){JT+=sdt;if(cur>=0){const [a,b]=MODE.stages[cur].win;if(JT>=b){if(playing&&!dragging){go(cur+1);}else JT=a+((JT-b)%(b-a));}
+   if(cur>=0){const [a2,b2]=MODE.stages[cur].win;MODE.stages[cur].btn.style.setProperty('--p',clamp((JT-a2)/(b2-a2),0,1).toFixed(3));}}else if(JT>=JEND)JT=0;}
+ for(let i=0;i<w.ups.length;i++)w.ups[i](T,sdt);
  stepCam(dt);updHi(dt);
- if(playing&&!tw){dwell+=dt*SPEED;if(cur>=0)STAGES[cur].btn.style.setProperty('--p',clamp(dwell/DWELL,0,1).toFixed(3));if(dwell>=(cur<0?8:DWELL))go(cur+1);}
- updChip(T);renderer.render(scene,cam);updLabels();requestAnimationFrame(frame);}
+ if(playing&&!tw){dwell+=dt*SPEED;if(MODE.key!=='grp'&&cur>=0)STAGES[cur].btn.style.setProperty('--p',clamp(dwell/DWELL,0,1).toFixed(3));
+  if(cur<0&&dwell>=(MODE.key==='grp'?14:8))go(0);else if(MODE.key!=='grp'&&cur>=0&&dwell>=DWELL)go(cur+1);}
+ updChip();drawChart();renderer.render(w.scene,cam);updLabels();requestAnimationFrame(frame);}
 
 resize();
-const hs=location.hash.match(/^#etap-(\d+)$/);
-if(hs){const i=clamp(+hs[1]-1,0,STAGES.length-1);const k=STAGES[i].cam;camS.t.set(k[0],k[1],k[2]);camS.r=k[3]*rf()*1.6;camS.th=k[4]-.6;camS.ph=k[5]-.2;go(i);}
-else{camS.t.set(OVER.cam[0],OVER.cam[1],OVER.cam[2]);camS.r=OVER.cam[3]*rf()*1.25;camS.th=OVER.cam[4]-.5;camS.ph=OVER.cam[5]-.25;go(-1,{dur:3.4});dwell=0;}
+let hm=location.hash.match(/^#(pesok|grp)(?:-(\d+))?$/),leg=location.hash.match(/^#etap-(\d+)$/);
+if(hm){const md=MODES[hm[1]];setMode(hm[1],hm[2]?clamp(+hm[2]-1,0,md.stages.length-1):-1,true);}
+else if(leg&&+leg[1]<=STAGES.length)setMode('pesok',+leg[1]-1,true);
+else setMode('pesok',-1,true);
 setPlay(playing);
 requestAnimationFrame(frame);
 })();
