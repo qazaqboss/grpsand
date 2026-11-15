@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* LAYOUT: одна живая площадка на весь экран; камера летит по цепочке, слева — паспорт этапа, внизу — лента из 12 этапов */
+/* LAYOUT: сайт-лонгрид: сверху 3D-тур (два раздела), ниже — подробный текст по этапам, справочник, проверка образца, источники */
 :root{
   color-scheme:dark;
   --bg:#06131d; --bg2:#0b1f2d; --glass:rgba(7,22,33,.78); --line:rgba(127,227,255,.18); --line2:rgba(127,227,255,.4);
@@ -11,18 +11,17 @@
   --cy:#7fe3ff; --qz:#efe2c4; --co:#ff6b57; --amb:#f2b35b; --wet:#a07a4e; --water:#3fb0dc;
   --f-disp:"Unbounded",system-ui,sans-serif; --f-body:"Golos Text",system-ui,sans-serif;
 }
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 *{box-sizing:border-box;min-width:0}
 button{font:inherit;color:inherit}
-#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab;outline:none}
 #gl.drag{cursor:grabbing}
-.hud{position:fixed;z-index:10;pointer-events:none}
+.hud{position:absolute;z-index:10;pointer-events:none}
 .hud > *{pointer-events:auto}
 
 /* top bar */
 .top{top:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
-  padding:calc(env(safe-area-inset-top,0px) + 14px) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));pointer-events:none}
+  padding:14px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));pointer-events:none}
 .brand{pointer-events:auto;display:flex;flex-direction:column;gap:2px}
 .brand b{font:700 15px/1.1 var(--f-disp);letter-spacing:.01em}
 .brand span{font-size:12px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
@@ -35,7 +34,7 @@ button{font:inherit;color:inherit}
 .btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* phase chip */
-.chip{position:fixed;z-index:10;left:50%;top:calc(env(safe-area-inset-top,0px) + 66px);transform:translateX(-50%);
+.chip{position:absolute;z-index:10;left:50%;top:66px;transform:translateX(-50%);
   display:flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--line);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;pointer-events:none;transition:opacity .4s}
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--cy);box-shadow:0 0 10px var(--cy);flex:none;animation:pulse 1.6s infinite}
@@ -43,7 +42,7 @@ button{font:inherit;color:inherit}
 @keyframes pulse{50%{opacity:.35}}
 
 /* panel */
-.panel{position:fixed;z-index:10;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 70px);bottom:calc(env(safe-area-inset-bottom,0px) + 104px);width:min(372px,calc(100vw - 32px));
+.panel{position:absolute;z-index:10;left:max(16px,env(safe-area-inset-left,0px));top:70px;bottom:104px;width:min(372px,calc(100vw - 32px));
   display:flex;flex-direction:column;border-radius:18px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);overflow:hidden}
 .pscroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:20px 20px 18px;scrollbar-width:thin;scrollbar-color:rgba(127,227,255,.25) transparent}
 .eyebrow{font:500 11px/1.2 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--cy);display:flex;gap:8px;align-items:center}
@@ -73,7 +72,7 @@ button{font:inherit;color:inherit}
 .ptoggle{display:none}
 
 /* timeline */
-.bar{left:0;right:0;bottom:0;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px));
+.bar{left:0;right:0;bottom:0;padding:10px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));
   display:flex;gap:10px;align-items:center;background:linear-gradient(to top,rgba(6,19,29,.92) 40%,rgba(6,19,29,0));pointer-events:auto}
 .ctrl{display:flex;gap:6px;flex:none}
 .ctrl .btn{width:44px;height:44px;padding:0}
@@ -92,7 +91,7 @@ button{font:inherit;color:inherit}
 .step[aria-current=step] span{color:var(--ink)}
 
 /* labels */
-#labs{position:fixed;inset:0;z-index:8;pointer-events:none;overflow:hidden}
+#labs{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden}
 .co{position:absolute;left:0;top:0;opacity:0;transition:opacity .45s;will-change:transform}
 .co.on{opacity:1}
 .co .dot{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--cy);box-shadow:0 0 0 4px rgba(127,227,255,.18),0 0 14px var(--cy)}
@@ -106,7 +105,7 @@ button{font:inherit;color:inherit}
 .pill.on{opacity:1;pointer-events:auto}
 .pill:hover{border-color:var(--cy)}
 .pill b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--cy);color:#04121b;font:600 11px var(--f-body)}
-.modes{pointer-events:auto;display:flex;padding:3px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin-right:auto;margin-left:18px}
+.modes{pointer-events:auto;display:flex;padding:3px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin-right:auto}
 .modes button{border:0;background:transparent;min-height:36px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;color:var(--soft);white-space:nowrap}
 .modes button[aria-selected=true]{background:var(--qz);color:#04121b}
 .modes button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
@@ -117,18 +116,16 @@ button{font:inherit;color:inherit}
 .chl span{display:flex;align-items:center;gap:5px}.chl span::before{content:"";width:12px;height:2px;border-radius:1px;background:var(--c)}
 .chn{font-size:11px;color:var(--mute);margin-top:4px}
 .cta{width:100%;margin-top:16px;min-height:44px;background:rgba(239,226,196,.1);border-color:rgba(239,226,196,.35);color:var(--qz)}
-.hint{position:fixed;z-index:9;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 92px);font-size:12px;color:var(--mute);pointer-events:none;transition:opacity .6s}
+.hint{position:absolute;z-index:9;right:max(16px,env(safe-area-inset-right,0px));bottom:92px;font-size:12px;color:var(--mute);pointer-events:none;transition:opacity .6s}
 
 @media (max-width:760px){
   .brand{display:none}
   .modes{margin-left:0}
   .modes .full{display:none}.modes .sh{display:inline}
   .tools .lbl{display:none}
-  .chip{top:calc(env(safe-area-inset-top,0px) + 62px);font-size:12px}
-  html,body{height:auto;min-height:100%}
-  body{overflow-x:hidden;overflow-y:auto;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px)}
-  #gl{touch-action:pan-y}
-  .panel{position:relative;top:auto;bottom:auto;left:auto;width:auto;margin:calc(env(safe-area-inset-top,0px) + 64vh) max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));border-radius:16px;overflow:visible}
+  .chip{top:62px;font-size:12px}
+  .panel .more{display:none}
+  .panel{position:relative;top:auto;bottom:auto;left:auto;width:auto;margin:12px max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));border-radius:16px;overflow:visible}
   .panel::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line2);margin:10px auto 0}
   .pscroll{overflow:visible;padding:12px 16px 18px}
   .panel h1{font-size:18px;margin:8px 0 6px}
@@ -144,14 +141,102 @@ button{font:inherit;color:inherit}
   .co .box small{display:none}
   .co .stem{height:22px}.co .box{bottom:22px}
 }
-@media (prefers-reduced-motion:reduce){.chip i{animation:none}.pfade{animation:none}}
+
+/* ===== сайт: навигация, 3D-блок, длинный текст ===== */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+.topnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;gap:18px;height:56px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));
+  background:rgba(6,19,29,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topnav .logo{font:700 14px/1.1 var(--f-disp);color:var(--ink);text-decoration:none;white-space:nowrap;flex:none}
+.topnav .links{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
+.topnav .links::-webkit-scrollbar{display:none}
+.topnav .links a{flex:none;color:var(--soft);text-decoration:none;font-size:13.5px;padding:8px 11px;border-radius:999px;white-space:nowrap}
+.topnav .links a:hover,.topnav .links a:focus-visible{background:rgba(127,227,255,.1);color:var(--ink);outline:none}
+.viewer{position:relative;background:var(--bg);scroll-margin-top:56px}
+.vp{position:relative;height:calc(100svh - 56px - env(safe-area-inset-top,0px));min-height:580px;max-height:1100px;overflow:hidden}
+.viewer:fullscreen .vp{height:100vh;max-height:none}
+.cue{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 16px;color:var(--mute);text-decoration:none;font-size:13.5px;border-top:1px solid var(--line);background:var(--bg)}
+.cue svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;animation:bob 1.8s ease-in-out infinite}
+.cue:hover{color:var(--ink)}
+@keyframes bob{50%{transform:translateY(4px)}}
+.band{padding-block:clamp(48px,7vw,96px);scroll-margin-top:56px}
+.band.alt{background:#081a27}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.kick{font:500 12px/1 var(--f-disp);letter-spacing:.14em;text-transform:uppercase;color:var(--cy);margin:0 0 14px}
+.band h2{font:700 clamp(24px,3.4vw,38px)/1.1 var(--f-disp);margin:0 0 16px;text-wrap:balance;max-width:24ch}
+.intro{font-size:17px;line-height:1.6;color:var(--soft);max-width:68ch;margin:0 0 28px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin-bottom:36px}
+.fact{padding:16px 18px;border-radius:14px;border:1px solid var(--line);background:rgba(127,227,255,.04)}
+.fact b{display:block;font:500 13px/1.2 var(--f-disp);color:var(--qz);margin-bottom:6px}
+.fact p{margin:0;font-size:14.5px;color:var(--soft);line-height:1.5}
+.strip{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:28px}
+.strip a{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 12px 0 6px;border-radius:999px;border:1px solid var(--line);color:var(--soft);text-decoration:none;font-size:13.5px}
+.strip a b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(127,227,255,.12);color:var(--cy);font:600 12px var(--f-body)}
+.strip a:hover,.strip a:focus-visible{border-color:var(--cy);color:var(--ink);outline:none}
+.stg{display:grid;grid-template-columns:72px minmax(0,1fr);gap:clamp(12px,3vw,28px);padding-block:30px;border-top:1px solid var(--line);scroll-margin-top:70px}
+.stg-n{font:700 clamp(30px,4vw,44px)/1 var(--f-disp);color:transparent;-webkit-text-stroke:1px var(--cy)}
+.stg-b h3{font:700 clamp(19px,2.2vw,24px)/1.15 var(--f-disp);margin:0 0 6px}
+.stg-s{margin:0 0 14px;font-size:13px;color:var(--cy)}
+.stg-b > p{max-width:70ch;color:var(--soft);font-size:16px;line-height:1.65;margin:0 0 12px}
+.stg-b h4{font:500 11px/1 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:18px 0 10px}
+.stg-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px}
+.stg .steps li{font-size:15px}
+.stg .note{max-width:70ch}
+.see{margin-top:18px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.card{padding:18px 20px;border-radius:14px;border:1px solid var(--line);background:var(--bg2)}
+.card h3{font:500 15px/1.25 var(--f-disp);color:var(--qz);margin:0 0 10px;display:flex;gap:10px;align-items:center}
+.card h3 span{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(127,227,255,.12);color:var(--cy);font:600 12px var(--f-body)}
+.card p{margin:0;font-size:14.5px;color:var(--soft);line-height:1.55}
+.card ul{margin:0;padding-left:18px;font-size:14.5px;color:var(--soft)}.card li{margin-bottom:6px}
+.band .note{font-size:13.5px;margin-top:16px;max-width:80ch}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:500;font-size:13px}
+td.nm{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tag.bad{background:rgba(255,107,87,.14);color:var(--co);border-color:rgba(255,107,87,.35)}
+.db td:first-child{width:130px}
+.dbbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.dbbar input{flex:1 1 260px;min-height:46px;font:16px var(--f-body);padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--ink)}
+.fb{font:500 13.5px var(--f-body);min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--ink);cursor:pointer}
+.fb[aria-pressed=true]{background:var(--cy);color:#04121b;border-color:var(--cy)}
+.dbn{font-size:13px;color:var(--mute);margin:4px 0 8px}
+.checker{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+.fs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}
+.f label{display:block;font-size:13px;color:var(--mute);margin-bottom:5px}
+.f input,.f select{width:100%;min-height:46px;font:16px var(--f-body);padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--ink)}
+.dbbar input:focus-visible,.f input:focus-visible,.f select:focus-visible,.fb:focus-visible{outline:2px solid var(--cy);outline-offset:1px}
+.verdict{font:700 clamp(20px,2.6vw,28px)/1.2 var(--f-disp);margin-bottom:12px}
+.verdict.ok{color:var(--cy)}.verdict.no{color:var(--co)}
+.src{padding-left:20px;font-size:14.5px;color:var(--mute)}.src li{margin-bottom:8px}.src a{color:var(--cy)}
+.foot{margin-top:28px;font-size:13px;color:var(--mute);max-width:80ch}
+@media (max-width:760px){
+  .topnav{gap:10px;height:52px}.topnav .logo{display:none}
+  .vp{height:68svh;min-height:430px}
+  .stg{grid-template-columns:minmax(0,1fr);padding-block:24px}
+  .stg-n{font-size:28px}
+  .stg-g,.checker{grid-template-columns:minmax(0,1fr)}
+  .intro{font-size:16px}
+  .stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}
+  .stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0;text-align:right}
+  .stack td::before{content:attr(data-l);color:var(--mute);text-align:left;flex:0 0 auto}
+  .db td:first-child{width:auto}
+  table{font-size:13.5px}
+}
+@media (prefers-reduced-motion:reduce){.chip i{animation:none}.pfade{animation:none}.cue svg{animation:none}html{scroll-behavior:auto}}
+html{scroll-behavior:smooth}
 </style>
 
+<nav class="topnav" aria-label="Разделы сайта">
+  <a class="logo" href="#viewer">Путь кварцевого проппанта</a>
+  <div class="links"><a href="#viewer">3D-тур</a><a href="#proizvodstvo">Производство</a><a href="#grp-text">ГРП на скважине</a><a href="#normy">Нормы</a><a href="#proverka">Проверка образца</a><a href="#kz">Казахстан</a><a href="#zapusk">Запуск</a><a href="#istochniki">Источники</a></div>
+</nav>
+<section class="viewer" id="viewer" aria-label="3D-тур">
+<div class="vp" id="vp">
 <canvas id="gl" tabindex="0" aria-label="3D-модель цепочки производства проппанта. Тяните, чтобы повернуть, колесо или щипок — масштаб."></canvas>
 <div id="labs" aria-hidden="true"></div>
 
 <header class="hud top">
-  <div class="brand"><b>Путь кварцевого проппанта</b><span>от карьера до скважины</span></div>
   <div class="modes" role="tablist" aria-label="Раздел">
     <button type="button" role="tab" data-m="pesok" aria-selected="true"><span class="full">Производство песка</span><span class="sh">Песок</span></button>
     <button type="button" role="tab" data-m="grp" aria-selected="false"><span class="full">ГРП на скважине</span><span class="sh">ГРП</span></button>
@@ -165,16 +250,9 @@ button{font:inherit;color:inherit}
 
 <div class="chip" id="chip"><i></i><span id="chipT">Загрузка сцены…</span></div>
 
-<aside class="panel" id="panel" aria-live="polite">
-  <button class="btn ptoggle" id="bMin" aria-expanded="true">Свернуть</button>
-  <div class="pscroll" id="pbody"></div>
-  <div class="pfoot">
-    <button class="btn" id="bPrev2">← Назад</button>
-    <button class="btn" id="bNext2">Дальше →</button>
-  </div>
-</aside>
 
-<div class="hint" id="hint">Тяните — поворот · колесо — масштаб · ← → — этапы</div>
+
+<div class="hint" id="hint">Тяните — поворот · щёлкните сцену, затем колесо — масштаб</div>
 
 <nav class="hud bar" aria-label="Этапы цепочки">
   <div class="ctrl">
@@ -184,12 +262,128 @@ button{font:inherit;color:inherit}
   </div>
   <div class="steps-bar" id="stepsBar"></div>
 </nav>
+</div>
+<aside class="panel" id="panel" aria-live="polite">
+  <button class="btn ptoggle" id="bMin" aria-expanded="true">Свернуть</button>
+  <div class="pscroll" id="pbody"></div>
+  <div class="pfoot">
+    <button class="btn" id="bPrev2">← Назад</button>
+    <button class="btn" id="bNext2">Дальше →</button>
+  </div>
+</aside>
+</section>
+
+<a class="cue" href="#proizvodstvo">Листайте вниз: всё подробно, текстом<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>
+
+<main>
+<section class="band" id="proizvodstvo"><div class="wrap">
+  <p class="kick">Часть 1</p>
+  <h2>Производство песка: от карьера до отгрузки</h2>
+  <p class="intro">Кварцевый проппант — это отмытый, высушенный и рассеянный на узкие фракции природный кварцевый песок. Ценятся круглые, прочные и чистые зёрна. Ниже — десять этапов, которые проходит песок на пути от недр до вагона. Цифры этапа совпадают с 3D-туром вверху: кнопка «Смотреть в 3D» переносит к нужному месту на площадке.</p>
+  <div class="facts">
+    <div class="fact"><b>Материал</b><p>SiO₂, отмытый и рассеянный. Эталон — «Northern White» из древнего песчаника St. Peter (США).</p></div>
+    <div class="fact"><b>Работа</b><p>Заходит в трещину ГРП и после сброса давления не даёт ей сомкнуться, оставляя проницаемый каркас.</p></div>
+    <div class="fact"><b>Предел</b><p>Кварц — для умеренных давлений смыкания, ориентир до ~40 МПа (≈ 6000 psi). Выше — песок в смоле или керамика.</p></div>
+    <div class="fact"><b>Стандарт</b><p>ISO 13503-2 (заменил API RP 56/58/60) и API RP 19C: размер, форма, кислотная растворимость, мутность, прочность.</p></div>
+  </div>
+  <div id="lpP"></div>
+</div></section>
+
+<section class="band alt" id="grp-text"><div class="wrap">
+  <p class="kick">Часть 2</p>
+  <h2>ГРП на скважине: от расстановки флота до добычи</h2>
+  <p class="intro">Гидроразрыв пласта — это операция на кустовой площадке, где готовый песок наконец делает свою работу. Жидкость под высоким давлением разрывает породу, песок заходит в трещину и держит её открытой. Ниже девять шагов одной многостадийной операции в горизонтальной скважине по схеме «пробка и перфорация».</p>
+  <div class="facts">
+    <div class="fact"><b>Флот</b><p>Ёмкости с водой и песком, блендер, насосные установки, манифольд, станция контроля.</p></div>
+    <div class="fact"><b>Стадии</b><p>Трещины делают по очереди от носка ствола к пятке, каждую отсекает пробка.</p></div>
+    <div class="fact"><b>График</b><p>Подушка → мелкая фракция → основная фракция → продавка → остановка.</p></div>
+    <div class="fact"><b>Итог</b><p>Проводимость трещины: насколько легко нефть и газ идут через пачку зёрен.</p></div>
+  </div>
+  <div id="lpG"></div>
+</div></section>
+
+<section class="band" id="normy"><div class="wrap">
+  <p class="kick">Справочник</p>
+  <h2>Нормы и база знаний</h2>
+  <p class="intro">Нормативы ISO 13503-2 и API, фракции, паспорт партии, оборудование, месторождения и производители. Ищите по слову или выберите раздел.</p>
+  <div class="dbbar"><input id="q" type="search" placeholder="Поиск: 20/40, мутность, Хромтау, сушилка…" aria-label="Поиск по базе"></div>
+  <div class="dbbar" id="cats" role="group" aria-label="Раздел базы"></div>
+  <div class="dbn" id="dbn"></div>
+  <div class="tbl"><table class="stack db"><thead><tr><th>Раздел</th><th>Параметр / объект</th><th>Значение</th><th>Комментарий и источник</th></tr></thead><tbody id="dbt"></tbody></table></div>
+</div></section>
+
+<section class="band alt" id="proverka"><div class="wrap">
+  <p class="kick">Инструмент</p>
+  <h2>Проверка лабораторного образца</h2>
+  <p class="intro">Введите результаты испытаний партии — страница сравнит их с нормами и покажет, что не проходит.</p>
+  <div class="checker">
+    <div>
+      <div class="fs">
+        <div class="f"><label for="fr">Фракция</label><select id="fr"><option>12/20</option><option>16/30</option><option selected>20/40</option><option>30/50</option><option>40/70</option><option>70/140</option></select></div>
+        <div class="f"><label for="i1">В фракции, %</label><input id="i1" type="number" step="0.1" value="93.5"></div>
+        <div class="f"><label for="i2">Крупнее верхнего сита, %</label><input id="i2" type="number" step="0.01" value="0.05"></div>
+        <div class="f"><label for="i3">Мельче нижнего сита, %</label><input id="i3" type="number" step="0.1" value="0.8"></div>
+        <div class="f"><label for="i4">Сферичность</label><input id="i4" type="number" step="0.1" value="0.7"></div>
+        <div class="f"><label for="i5">Округлость</label><input id="i5" type="number" step="0.1" value="0.6"></div>
+        <div class="f"><label for="i6">Кислотная растворимость, %</label><input id="i6" type="number" step="0.1" value="1.4"></div>
+        <div class="f"><label for="i7">Мутность, FTU</label><input id="i7" type="number" step="1" value="120"></div>
+        <div class="f"><label for="i8" id="l8">Мелочь при раздавливании, %</label><input id="i8" type="number" step="0.1" value="11"></div>
+      </div>
+      <p class="note">Значения заполнены примером. Пределы раздавливания — ориентир по таблице API RP 56; для сертификата используйте действующие ISO 13503-2 / API RP 19C.</p>
+    </div>
+    <div><div class="verdict" id="vd"></div><div class="tbl"><table class="stack"><thead><tr><th>Показатель</th><th>Образец</th><th>Норма</th><th>Итог</th></tr></thead><tbody id="ct"></tbody></table></div></div>
+  </div>
+</div></section>
+
+<section class="band" id="kz"><div class="wrap">
+  <p class="kick">Рынок</p>
+  <h2>Казахстан: кто делает и где брать</h2>
+  <div class="cards">
+    <div class="card"><h3>SandCo (Namys Group)</h3><p>Месторождение «Карьерное», своя ж/д ветка. По собственному пресс-релизу — 15 тыс. т кварцевого песка в 2024 г., поставки на ГРП Тенгизшевройла, план 25 тыс. т на 2025 г. Данные компании, независимо не подтверждены.</p></div>
+    <div class="card"><h3>Проппантного завода нет</h3><p>Отчёт по госпрограмме 2020 г. фиксирует отсутствие производства проппанта в РК. Институт металлургии и обогащения (Алматы) разрабатывает керамические проппанты из местного боксита, глины и микрокремнезёма.</p></div>
+    <div class="card"><h3>Сырьё есть</h3><p>Кварцевые пески готовят к добыче на Сусановском (Хромтауский р-н) и Мугоджарском (Мугалжарский р-н) месторождениях Актюбинской области и на Жанплес-3 (Кызылординская). Это сырьё, не сертифицированный проппант.</p></div>
+    <div class="card"><h3>Где купить</h3><p>Через подрядчика ГРП (чаще всего в составе услуги); у заводов России — Боровичский комбинат, НИКА-ПетроТэк, ФОРЭС, Красноярский (в основном керамика); в Китае; через тендеры недропользователей на zakup.sk.kz.</p></div>
+  </div>
+  <p class="note">Кварцевый песок РК в основном импортирует из России и Китая (код ТН ВЭД 2505 10, данные 2022 г.). В США средняя цена промышленного песка на карьере в 2025 г. — около $36 за тонну.</p>
+</div></section>
+
+<section class="band alt" id="zapusk"><div class="wrap">
+  <p class="kick">План</p>
+  <h2>Что нужно, чтобы запустить производство</h2>
+  <div class="cards five">
+    <div class="card"><h3><span>1</span>Сырьё</h3><ul><li>Участок с кварцевым песком</li><li>Керн и испытания по ISO 13503-2</li><li>Запасы на 15–20+ лет работы</li></ul></div>
+    <div class="card"><h3><span>2</span>Разрешения</h3><ul><li>Лицензия на добычу (уточнить категорию полезного ископаемого)</li><li>План горных работ, ОВОС</li><li>Экологическое разрешение, водопользование</li></ul></div>
+    <div class="card"><h3><span>3</span>Фабрика</h3><ul><li>Мокрая часть: грохот, скруббер, гидроциклоны, обезвоживание, сгуститель</li><li>Сухая: сушилка, вибросита, силосы, фасовка</li><li>Газ, электричество, вода</li></ul></div>
+    <div class="card"><h3><span>4</span>Качество</h3><ul><li>Своя лаборатория QC на каждую партию</li><li>Внешний сертификат аккредитованной лаборатории</li><li>Паспорт качества партии</li></ul></div>
+    <div class="card"><h3><span>5</span>Сбыт</h3><ul><li>Квалификация поставщика у операторов и подрядчиков ГРП</li><li>Сертификат СТ-KZ для местного содержания</li><li>Опытная партия на реальной скважине</li></ul></div>
+  </div>
+  <p class="note">Общая схема для ориентира. Требования к разрешениям уточняйте под конкретный участок.</p>
+</div></section>
+
+<section class="band" id="istochniki"><div class="wrap">
+  <p class="kick">Ссылки</p>
+  <h2>Источники</h2>
+  <ul class="src">
+    <li><a href="https://cdn.standards.iteh.ai/samples/44977/9cb490a42ecc4a1da449b282213e7101/ISO-13503-2-2006-Amd-1-2009.pdf">ISO 13503-2:2006/Amd 1:2009 — спецификации проппанта</a></li>
+    <li><a href="https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7334635">Патент US 7334635 — пересказ требований API RP 56</a></li>
+    <li><a href="https://www.horiba.com/scientific/products/particle-characterization/applications/frac-sand">HORIBA — контроль размера и формы проппанта</a></li>
+    <li><a href="https://www.mclanahan.com/blog/frac-sand-wet-processing-key-technologies-for-high-quality-frac-sand">McLanahan — мокрое обогащение frac sand</a> · <a href="https://www.mclanahan.com/blog/how-to-best-configure-my-sand-washing-plant">конфигурация фабрики</a> · <a href="https://rockproducts.com/2022/10/14/mclanahan-frac-sand-plants-designed-to-remove-silt-clay-impurities/">тест месторождения до инвестиций</a></li>
+    <li><a href="https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-sand-industrial.pdf">USGS Mineral Commodity Summaries 2026 — промышленный песок</a></li>
+    <li><a href="https://www.oilandgas360.com/?p=789257">FT / OilandGas360 — цена песка на карьере и на скважине</a></li>
+    <li><a href="https://www.chemanalyst.com/NewsAndDeals/NewsDetails/sandco-achieves-record-quartz-sand-output-in-2024-targets-china-market-37185">ChemAnalyst — SandCo</a></li>
+    <li><a href="https://www.ncste.kz/assets/report_files/2020/AP05131248-OT-20/en_62152__990978_1603367664.docx">НЦГНТЭ — отчёт по проппантам, 2020</a> · <a href="https://doaj.org/article/a1dd92ace1874f588639bb174bf2e459">Ceramics, 2024</a></li>
+    <li><a href="https://journals.rcsi.science/2707-4226/article/view/277978">Проппанты на месторождениях Атырауского региона</a></li>
+    <li><a href="https://ecoportal.kz/Rubric/RubService/LoadFile/65432">План горных работ — Мугоджарское</a> · <a href="https://ecoportal.kz/Rubric/RubService/LoadFile/41574">Сусановское</a> · <a href="https://ecoportal.kz/Rubric/RubService/LoadFile/36535">Жанплес-3</a></li>
+    <li><a href="https://oec.world/profile/bilateral-product/silica-sands-and-quartz-sands/reporter/kaz">OEC — торговля кварцевым песком, Казахстан</a> · <a href="https://2024.minexeurasia.com/?p=1514">Qazaq Kaolin — Алексеевское</a></li>
+  </ul>
+  <p class="foot">Схемы в 3D условные и служат для понимания процесса. Для проектных решений опирайтесь на действующие стандарты и данные конкретного месторождения и скважины.</p>
+</div></section>
+</main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
 'use strict';
-if(!window.THREE){document.getElementById('chipT').textContent='Не удалось загрузить 3D-движок. Проверьте соединение и обновите страницу.';return;}
 
 /* ================= КОНТЕНТ ================= */
 const STAGES=[
@@ -359,6 +553,131 @@ const OVER={title:'Производство кварцевого проппан�
  legend:[['var(--wet)','сырой и влажный песок'],['var(--qz)','сухой песок 20/40'],['#e0b46a','марка 40/70'],['#c98b5a','марка 100 mesh'],['var(--water)','оборотная вода'],['#6b4b33','шлам']],
  cam:[-16,-6,0,215,.1,.84]};
 
+const DB=[
+['Норматив','Сферичность','≥ 0,6','ISO 13503-2 / API RP 56; по таблице Крумбейна'],
+['Норматив','Округлость','≥ 0,6','ISO 13503-2 / API RP 56'],
+['Норматив','Доля в заданной фракции','≥ 90%','ISO 13503-2 Annex B'],
+['Норматив','Крупнее первого сита стопки','≤ 0,1%','Для 20/40 — остаток на сите 16 mesh'],
+['Норматив','Мельче последнего сита','≤ 1,0%','Для 20/40 — проход через сито 50 mesh'],
+['Норматив','Кислотная растворимость, фракции ≥ 30/50','≤ 2,0%','Смесь 12% HCl + 3% HF'],
+['Норматив','Кислотная растворимость, мельче 30/50','≤ 3,0%','ISO 13503-2 табл. B.2'],
+['Норматив','Кислотная растворимость, керамика','≤ 7,0%','ISO 13503-2 табл. B.2'],
+['Норматив','Мутность','≤ 250 FTU (NTU)','Пыль, глина, шлам; растёт при каждой перевалке'],
+['Норматив','Раздавливание 12/20','≤ 16% мелочи при 3000 psi','Ориентир API RP 56, табл. 3'],
+['Норматив','Раздавливание 16/30','≤ 14% при 3000 psi','Ориентир API RP 56'],
+['Норматив','Раздавливание 20/40','≤ 14% при 4000 psi','Ориентир API RP 56'],
+['Норматив','Раздавливание 30/50','≤ 10% при 4000 psi','Ориентир API RP 56'],
+['Норматив','Раздавливание 40/70','≤ 8% при 5000 psi','Ориентир API RP 56'],
+['Норматив','Раздавливание 70/140','≤ 6% при 5000 psi','Ориентир API RP 56'],
+['Норматив','K-value','Макс. нагрузка (тыс. psi), при которой мелочи ≤ 10%','Современная классификация ISO 13503-2 / API RP 19C'],
+['Фракция','6/12','1,70–3,35 мм','Очень крупная, редкая'],
+['Фракция','8/16','1,18–2,36 мм','Крупная'],
+['Фракция','12/20','0,85–1,70 мм','Высокопроницаемые пласты'],
+['Фракция','16/30','0,60–1,18 мм','Концевая закачка'],
+['Фракция','20/40','0,425–0,85 мм','Самая ходовая марка'],
+['Фракция','30/50','0,30–0,60 мм','Средние давления'],
+['Фракция','40/70','0,212–0,425 мм','Сланцы, многостадийный ГРП'],
+['Фракция','70/140 (100 mesh)','0,106–0,212 мм','Первые порции, микротрещины'],
+['Паспорт','Ситовый анализ','% на каждом сите','Ro-Tap, 10 минут'],
+['Паспорт','Медианный диаметр','мм','Обязателен к раскрытию по ISO 13503-2'],
+['Паспорт','Насыпная плотность','~1,5–1,6 г/см³','Для расчёта объёма в ёмкостях'],
+['Паспорт','Кажущаяся плотность','~2,65 г/см³','Кварц; керамика тяжелее'],
+['Паспорт','Кластеры зёрен','% слипшихся','Признак плохой промывки'],
+['Паспорт','Минералогия','% кварца (XRD)','Полевой шпат и карбонаты снижают прочность'],
+['Паспорт','Химия','SiO₂, Fe₂O₃, Al₂O₃, CaO, ППП','Рентгенофлуоресцентный анализ'],
+['Паспорт','Проводимость трещины','мД·фут при нагрузке','Долговременный тест ISO 13503-5'],
+['Паспорт','Влажность','% на отгрузке','Влажный песок слёживается'],
+['Оборудование','Вибрационный грохот','Отсев крупного и мусора','Начало мокрой части'],
+['Оборудование','Скруббер-аттритор','Пульпа 65–85% твёрдого','Счищает глину и плёнки с зёрен'],
+['Оборудование','Гидроциклон','Пески вниз, шлам вверх','Обесшламливание и классификация'],
+['Оборудование','Гидроклассификатор','Точная граница фракции','Восходящий поток'],
+['Оборудование','Обезвоживающий грохот','Снижает влажность перед сушкой','Конец мокрой части'],
+['Оборудование','Сгуститель','До ~90% воды в оборот','Экология и экономия воды'],
+['Оборудование','Сушилка','Барабанная или кипящий слой','Газ — крупная статья затрат'],
+['Оборудование','Вибросита сухого рассева','Товарные марки','20/40, 30/50, 40/70, 100 mesh'],
+['Оборудование','Силосы и фасовка','Биг-бэги ~1 т, навал в хопперы','Минимум перевалок'],
+['Оборудование','Лаборатория QC','Сита, Ro-Tap, пресс, турбидиметр, кислотная баня, микроскоп','Испытание каждой партии'],
+['Производитель','SandCo (Namys Group)','Казахстан, кварцевый песок','15 тыс. т в 2024 г. по данным компании; поставки на ГРП ТШО'],
+['Производитель','Институт металлургии и обогащения','Казахстан, НИОКР','Керамические проппанты из местного боксита и отходов'],
+['Производитель','Боровичский комбинат огнеупоров','Россия, керамика','Крупнейший в РФ'],
+['Производитель','НИКА-ПетроТэк','Россия, керамика',''],
+['Производитель','ФОРЭС','Россия, керамика',''],
+['Производитель','Красноярский завод проппантов','Россия, керамика',''],
+['Производитель','Smart Sand','США, Northern White','Кварцевый frac sand и логистика'],
+['Месторождение','Карьерное','Кварцевый песок','SandCo; ж/д ветка к коридорам на Китай и Каспий'],
+['Месторождение','Сусановское','Хромтауский р-н, Актюбинская обл.','План горных работ 2024, ТОО «ЛокТехТранс»'],
+['Месторождение','Мугоджарское','Мугалжарский р-н, Актюбинская обл.','План горных работ 2025, ТОО «Тенгри Мунай»'],
+['Месторождение','Жанплес-3','Аральский р-н, Кызылординская обл.','План горных работ 2024, ТОО «Nedra Group KZ»'],
+['Месторождение','Алексеевское','Зерендинский р-н, Акмолинская обл.','Каолин; попутно до 91 тыс. т кварцевого песка, запуск в 2026'],
+['Документ','Лицензия на добычу','—','Категорию полезного ископаемого уточнить'],
+['Документ','План горных работ + ОВОС','—','Публикуются на ecoportal.kz'],
+['Документ','Протокол испытаний ISO 13503-2','—','Аккредитованная лаборатория'],
+['Документ','Паспорт качества партии','—','Прикладывается к каждой отгрузке'],
+['Документ','СТ-KZ','—','Местное содержание в закупках недропользователей'],
+['Документ','Код ТН ВЭД','2505 10','Пески кварцевые и кремнистые'],
+['Рынок','Цена на карьере, США 2025','~$36/т','USGS, средняя стоимость промышленного песка'],
+['Рынок','Карьер против скважины, США','~$41 → до $120 за короткую тонну','Разница — транспорт (FT)'],
+['Рынок','Импорт песка в РК, 2022','$3,25 млн','Основные поставщики — Россия и Китай (OEC)'],
+['Рынок','Атырауский регион','ГРП более 20 лет','Облегчённый проппант дал до +23,8% в модели']
+];
+
+/* ================= ДЛИННЫЙ ТЕКСТ ПОД 3D ================= */
+const DET_P=[
+'Разведку ведут по сетке скважин, чтобы оконтурить залежь по площади и глубине. Для каждого интервала керна строят гранулометрию: если основная масса зёрен не попадает в востребованные марки 20/40–100 mesh, выход товарного песка будет низким. Отдельно смотрят минералогию: полевой шпат и карбонаты снижают прочность и повышают кислотную растворимость, а оксиды железа дают плёнки на зёрнах, которые потом придётся снимать оттиркой.',
+'Почвенный слой складируют отдельно: он понадобится для рекультивации после отработки. Вскрышу везут во внешний отвал или в выработанное пространство. Продуктивный пласт вынимают уступами, чтобы борт карьера оставался устойчивым, а технику можно было развести по горизонтам. Важно не разубоживать песок глиной из кровли и подошвы пласта: каждая лишняя тонна глины потом нагружает промывку и шламовое хозяйство.',
+'Если приёмный бункер пустеет, мокрая часть работает рывками, а вместе с ней плавают плотность пульпы и качество промывки. Поэтому перед фабрикой держат запас сырья. Отсев крупного — камни, корни, комья плотной глины — выводят в отвал до того, как он попадёт в насосы и скрубберы и начнёт их изнашивать.',
+'Аттриционный скруббер работает при высокой плотности пульпы: зёрна трутся друг о друга и о лопасти, а не просто болтаются в воде. Пары лопастей с противоположным наклоном создают встречные потоки, где трение самое сильное. Обычно ставят каскад из нескольких камер, чтобы каждый объём песка провёл в оттирке достаточно времени. На выходе глина уже в воде, и её нужно отделить от песка на следующем шаге.',
+'Гидроциклон разделяет частицы по крупности и плотности центробежной силой. Через нижнюю насадку выходят пески, через верхний сливной патрубок — вода с глиной и самой мелкой фракцией. Слив попадает в сгуститель: шлам оседает на дно, а осветлённая вода с верха возвращается в процесс. Для площадки это главный способ снизить расход свежей воды.',
+'Гидроклассификатор работает восходящим потоком воды: крупное зерно оседает, мелкое уносится вверх. Так гранулометрию поправляют ещё до сушки. Обезвоживающий грохот с мелкой сеткой отжимает воду из слоя песка вибрацией. Дальше песок лежит в штабеле и дренирует: чем ниже влажность на входе в сушилку, тем меньше газа уходит на испарение воды.',
+'В барабанной сушилке лопасти поднимают песок и пересыпают его через поток горячих газов, а наклон барабана медленно двигает его к разгрузке. Другой вариант — аппарат кипящего слоя, где песок «кипит» в восходящем потоке горячего воздуха. Отходящие газы несут пыль, её улавливает рукавный фильтр. Работникам на сушке и рассеве нужны аспирация и средства защиты органов дыхания.',
+'Каждая дека вибросита задерживает зёрна крупнее размера своей сетки, и под каждой декой получается своя марка. Сетки изнашиваются и рвутся, поэтому их регулярно осматривают: одна порванная сетка сразу даёт брак по крупности. Всё, что не попало в товарные марки (крупное и пыль), уходит в отвал или в другие продукты, например в строительный песок.',
+'Лаборатория проверяет каждую партию. Кроме ситового анализа и формы зерна, измеряют мутность, кислотную растворимость, долю кластеров (слипшихся зёрен) и плотность. Главный тест — раздавливание: пробу в стальной ячейке нагружают прессом и считают долю образовавшейся мелочи. В современной классификации ISO 13503-2 / API RP 19C результат выражают K-value: это максимальная нагрузка в тысячах psi, при которой мелочи не больше 10%.',
+'Тонна песка дешёвая, а тонна-километр — нет, поэтому завод стараются ставить ближе к потребителю или к железной дороге. Силосы хранят марки раздельно и защищают песок от влаги. На каждой перевалке зёрна трутся и бьются, появляется пыль, и мутность после доставки может оказаться выше, чем в заводском паспорте. Поэтому покупатели часто перепроверяют партию уже на кусте.'];
+const DET_G=[
+'Площадку готовят заранее: отсыпка, подъезды, место под ёмкости и технику. Флот расставляют так, чтобы короткими линиями связать воду и песок с блендером, блендер — с насосами через низконапорную часть манифольда, а насосы — с устьем через линии высокого давления. Перед работой линии опрессовывают; во время закачки к ним не подходят — это опасная зона.',
+'В горизонтальных скважинах самый распространённый способ многостадийного ГРП — «пробка и перфорация» (plug-and-perf). Первую стадию делают у носка ствола. Для каждой следующей компоновку из пробки и перфоратора доводят по горизонтали закачкой жидкости, ставят пробку, отстреливают несколько кластеров и поднимают кабель. Так вдоль ствола получается серия изолированных интервалов.',
+'На графике давления подушка видна как резкий пик — давление разрыва, после которого давление снижается до уровня распространения трещины. Объём подушки подбирают так, чтобы трещина успела набрать ширину: если песок пойдёт в слишком узкую трещину, она может перестать его принимать.',
+'Блендер получает воду и песок, добавляет химреагенты и выдаёт насосам однородную смесь. Концентрацию песка поднимают ступенями по графику из дизайна ГРП. Оператор в станции контроля следит за давлением: плавный рост нормален, а резкий скачок означает, что трещина забивается песком (screen-out). Тогда подачу песка останавливают и промывают ствол.',
+'В конце стадии подачу песка прекращают и закачивают чистую жидкость в объёме ствола до перфораций. Цель — чтобы в колонне не осталось песка, иначе следующая пробка не дойдёт до места. Слишком большой объём продавки, наоборот, вытеснит песок из прискважинной части трещины и ухудшит её связь со стволом.',
+'После остановки насосов фиксируют мгновенное давление остановки (ISIP), по нему оценивают напряжения в пласте. Затем давление падает: жидкость уходит в породу, стенки трещины сходятся и ложатся на пачку проппанта. Здесь и проверяется качество песка: слабые зёрна дробятся, мелочь забивает поры, и проводимость падает.',
+'Каждая следующая стадия повторяет тот же цикл и смещается к пятке ствола. Время на стадию складывается из спуска пробки и перфоратора, закачки и подготовки к следующей. На длинных горизонтальных скважинах стадий бывает несколько десятков, поэтому скорость их смены прямо влияет на стоимость работ.',
+'После последней стадии пробки нужно убрать, чтобы открыть весь ствол. Колтюбинговая установка спускает гибкую трубу с забойным двигателем и долотом и разбуривает пробки одну за другой, вымывая шлам на поверхность. Затем скважину пускают в обратный приток: возвращается часть жидкости ГРП, иногда с песком. Большой вынос песка говорит о том, что пачка нестабильна или трещина закреплена плохо.',
+'В добыче всё решает проводимость трещины — насколько легко нефть и газ проходят через пачку песка. Она зависит от размера и формы зёрен, их прочности под давлением смыкания и чистоты пачки. Требования к песку на заводе (круглость, прочность, низкая мутность) в итоге превращаются в дебит скважины и в то, как долго он держится.'];
+function renderLong(){
+ const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const art=(key,s,i,det)=>`<article class="stg" id="${key}-t${i+1}"><div class="stg-n">${String(i+1).padStart(2,'0')}</div><div class="stg-b">
+  <h3>${e(s.title)}</h3>${s.state?`<p class="stg-s">${e(s.state)}</p>`:''}<p>${e(s.lead)}</p><p>${e(det)}</p>
+  <div class="stg-g"><div><h4>Что происходит</h4><ol class="steps">${s.steps.map(x=>`<li>${e(x)}</li>`).join('')}</ol></div>
+  <div><h4>Цифры</h4><div class="nums">${s.nums.map(([v,l])=>`<div class="num"><b>${e(v)}</b><span>${e(l)}</span></div>`).join('')}</div></div></div>
+  <div class="stg-g"><div><h4>Что измеряют</h4><div class="tags">${s.data.map(x=>`<span class="tag">${e(x)}</span>`).join('')}</div></div>
+  <div><h4>Что нужно</h4><div class="tags">${s.need.map(x=>`<span class="tag n">${e(x)}</span>`).join('')}</div></div></div>
+  ${s.note?`<p class="note">${e(s.note)}</p>`:''}
+  <button class="btn see" type="button" data-goto="${key}:${i}"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/></svg>Смотреть в 3D</button></div></article>`;
+ const strip=(key,arr)=>`<div class="strip">${arr.map((s,i)=>`<a href="#${key}-t${i+1}"><b>${i+1}</b>${e(s.n)}</a>`).join('')}</div>`;
+ document.getElementById('lpP').innerHTML=strip('pesok',STAGES)+STAGES.map((s,i)=>art('pesok',s,i,DET_P[i])).join('');
+ document.getElementById('lpG').innerHTML=strip('grp',GSTAGES)+GSTAGES.map((s,i)=>art('grp',s,i,DET_G[i])).join('');
+ // база знаний
+ const cats=['Все',...new Set(DB.map(r=>r[0]))];let cat='Все';
+ const q=document.getElementById('q'),dbt=document.getElementById('dbt'),dbn=document.getElementById('dbn'),catsEl=document.getElementById('cats');
+ catsEl.innerHTML=cats.map(c=>`<button class="fb" type="button" aria-pressed="${c===cat}" data-c="${c}">${c}</button>`).join('');
+ const renderDB=()=>{const s=q.value.trim().toLowerCase();const rows=DB.filter(r=>(cat==='Все'||r[0]===cat)&&(!s||r.join(' ').toLowerCase().includes(s)));
+  dbn.textContent=rows.length?`Записей: ${rows.length}`:'Ничего не найдено. Попробуйте другое слово или раздел «Все».';
+  dbt.innerHTML=rows.map(r=>`<tr><td data-l="Раздел"><span class="tag">${r[0]}</span></td><td data-l="Параметр">${r[1]}</td><td data-l="Значение">${r[2]}</td><td data-l="Комментарий">${r[3]||'—'}</td></tr>`).join('');};
+ catsEl.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;cat=b.dataset.c;[...catsEl.children].forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderDB();});
+ q.addEventListener('input',renderDB);renderDB();
+ // проверка образца
+ const CR={'12/20':[3000,16],'16/30':[3000,14],'20/40':[4000,14],'30/50':[4000,10],'40/70':[5000,8],'70/140':[5000,6]};
+ const fr=document.getElementById('fr'),ct=document.getElementById('ct'),vd=document.getElementById('vd'),l8=document.getElementById('l8');
+ const val=id=>parseFloat(String(document.getElementById(id).value).replace(',','.'));
+ const check=()=>{const f=fr.value,c=CR[f],acid=(f==='40/70'||f==='70/140')?3:2;l8.textContent=`Мелочь при ${c[0]} psi, %`;
+  const R=[['В фракции',val('i1'),'≥ 90%',x=>x>=90],['Крупнее верхнего сита',val('i2'),'≤ 0,1%',x=>x<=.1],['Мельче нижнего сита',val('i3'),'≤ 1,0%',x=>x<=1],['Сферичность',val('i4'),'≥ 0,6',x=>x>=.6],['Округлость',val('i5'),'≥ 0,6',x=>x>=.6],['Кислотная растворимость',val('i6'),`≤ ${acid},0%`,x=>x<=acid],['Мутность',val('i7'),'≤ 250 FTU',x=>x<=250],[`Раздавливание, ${c[0]} psi`,val('i8'),`≤ ${c[1]}%`,x=>x<=c[1]]];
+  let bad=0;ct.innerHTML=R.map(([n,x,lim,fn])=>{const ok=!isNaN(x)&&fn(x);if(!ok)bad++;return `<tr><td data-l="Показатель">${n}</td><td class="nm" data-l="Образец">${isNaN(x)?'—':String(x).replace('.',',')}</td><td class="nm" data-l="Норма">${lim}</td><td data-l="Итог"><span class="tag ${ok?'':'bad'}">${ok?'норма':'не проходит'}</span></td></tr>`;}).join('');
+  vd.className='verdict '+(bad?'no':'ok');vd.textContent=bad?`Не проходит: ${bad} из 8`:`Фракция ${f} проходит все 8 проверок`;};
+ document.getElementById('proverka').addEventListener('input',check);check();
+}
+renderLong();
+
+if(!window.THREE){document.getElementById('chipT').textContent='Не удалось загрузить 3D-движок. Текст ниже доступен, обновите страницу для 3D.';return;}
 /* ================= ДВИЖОК ================= */
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canvas=document.getElementById('gl');
@@ -947,8 +1266,8 @@ const prev=()=>{const n=MODE.stages.length;go(cur<=0?(cur<0?n-1:-1):cur-1);}, ne
 $('bPrev').onclick=prev;$('bNext').onclick=next;$('bPrev2').onclick=prev;$('bNext2').onclick=next;
 $('bOver').onclick=()=>go(-1);
 const SPEEDS=[1,2,.5];$('bSpeed').onclick=()=>{SPEED=SPEEDS[(SPEEDS.indexOf(SPEED)+1)%3];$('bSpeed').textContent=(SPEED===.5?'0,5':SPEED)+'×';};
-$('bFull').onclick=()=>{const d=document;try{if(d.fullscreenElement)d.exitFullscreen();else{const p=d.documentElement.requestFullscreen&&d.documentElement.requestFullscreen();if(p&&p.catch)p.catch(()=>{});}}catch(e){}};
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){next();}else if(e.key==='ArrowLeft'){prev();}else if(e.key===' '&&(e.target===document.body||e.target===canvas)){e.preventDefault();$('bPlay').click();}else if(e.key==='o'||e.key==='щ'){go(-1);}else if(e.key==='f'||e.key==='а'){$('bFull').click();}});
+$('bFull').onclick=()=>{const d=document;try{if(d.fullscreenElement)d.exitFullscreen();else{const v=document.getElementById('viewer');const p=v.requestFullscreen&&v.requestFullscreen();if(p&&p.catch)p.catch(()=>{});}}catch(e){}};
+addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||!inView)return;if(e.key==='ArrowRight'){next();}else if(e.key==='ArrowLeft'){prev();}else if(e.key===' '&&(e.target===document.body||e.target===canvas)){e.preventDefault();$('bPlay').click();}else if(e.key==='o'||e.key==='щ'){go(-1);}else if(e.key==='f'||e.key==='а'){$('bFull').click();}});
 
 /* управление камерой */
 const ptrs=new Map();let pinch0=0,r0=0,moved=0;
@@ -960,15 +1279,19 @@ canvas.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)re
  if(dragging){camS.th-=dx*.0055;if(e.pointerType!=='touch')camS.ph=clamp(camS.ph-dy*.0045,.18,isUnder()?1.8:1.52);}});
 const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;if(!ptrs.size){dragging=false;canvas.classList.remove('drag');}};
 canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
-canvas.addEventListener('wheel',e=>{e.preventDefault();tw=null;camS.r=clamp(camS.r*Math.exp(e.deltaY*.0012),8,340);},{passive:false});
+canvas.addEventListener('pointerleave',()=>{if(document.activeElement===canvas)canvas.blur();});
+canvas.addEventListener('wheel',e=>{if(!(e.ctrlKey||document.activeElement===canvas||document.fullscreenElement))return;e.preventDefault();tw=null;camS.r=clamp(camS.r*Math.exp(e.deltaY*.0012),8,340);},{passive:false});
 
 /* размер и смещение кадра под панель */
 let W=0,Hh=0;
-function resize(){W=innerWidth;Hh=innerHeight;renderer.setSize(W,Hh,false);cam.aspect=W/Hh;
- const pr=panel.getBoundingClientRect();let ox=0,oy=0;
- if(W>760){ox=-(pr.right+8)/2;}else{oy=Hh*.15;}
+const vpEl=$('vp');
+function resize(){W=vpEl.clientWidth;Hh=vpEl.clientHeight;renderer.setSize(W,Hh,false);cam.aspect=W/Hh;
+ const pr=panel.getBoundingClientRect(),vr=vpEl.getBoundingClientRect();let ox=0,oy=0;
+ if(innerWidth>760){ox=-(pr.right-vr.left+8)/2;}else{oy=Hh*.15;}
  cam.setViewOffset(W,Hh,ox,oy,W,Hh);cam.updateProjectionMatrix();}
-addEventListener('resize',resize);
+addEventListener('resize',resize);if(window.ResizeObserver)new ResizeObserver(resize).observe(vpEl);
+let inView=true;if(window.IntersectionObserver)new IntersectionObserver(es=>{inView=es[0].isIntersecting;},{threshold:.15}).observe(vpEl);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-goto]');if(!b)return;const [k,i]=b.dataset.goto.split(':');if(MODE.key!==k)setMode(k,+i);else go(+i);setPlay(true);document.getElementById('viewer').scrollIntoView({behavior:RM?'auto':'smooth'});});
 
 /* выноски */
 const PV=new THREE.Vector3();
@@ -1000,12 +1323,12 @@ function drawChart(){const cv=document.getElementById('chartC');if(!cv)return;co
 
 /* цикл */
 const clock=new THREE.Clock();let T=0;
-function frame(){const dt=Math.min(clock.getDelta(),.05);const sdt=RM?dt*.4:dt*SPEED;T+=sdt;const w=MODE.w;
+function frame(){const dt=Math.min(clock.getDelta(),.05);if(!inView){requestAnimationFrame(frame);return;}const sdt=RM?dt*.4:dt*SPEED;T+=sdt;const w=MODE.w;
  if(MODE.key==='grp'){JT+=sdt;if(cur>=0){const [a,b]=MODE.stages[cur].win;if(JT>=b){if(playing&&!dragging){go(cur+1);}else JT=a+((JT-b)%(b-a));}
    if(cur>=0){const [a2,b2]=MODE.stages[cur].win;MODE.stages[cur].btn.style.setProperty('--p',clamp((JT-a2)/(b2-a2),0,1).toFixed(3));}}else if(JT>=JEND)JT=0;}
  for(let i=0;i<w.ups.length;i++)w.ups[i](T,sdt);
  stepCam(dt);updHi(dt);
- if(playing&&!tw){dwell+=dt*SPEED;if(MODE.key!=='grp'&&cur>=0)STAGES[cur].btn.style.setProperty('--p',clamp(dwell/DWELL,0,1).toFixed(3));
+ if(playing&&!tw&&inView){dwell+=dt*SPEED;if(MODE.key!=='grp'&&cur>=0)STAGES[cur].btn.style.setProperty('--p',clamp(dwell/DWELL,0,1).toFixed(3));
   if(cur<0&&dwell>=(MODE.key==='grp'?14:8))go(0);else if(MODE.key!=='grp'&&cur>=0&&dwell>=DWELL)go(cur+1);}
  updChip();drawChart();renderer.render(w.scene,cam);updLabels();requestAnimationFrame(frame);}
 
