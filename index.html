@@ -1,0 +1,811 @@
+<title>Путь кварцевого проппанта</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* LAYOUT: одна живая площадка на весь экран; камера летит по цепочке, слева — паспорт этапа, внизу — лента из 12 этапов */
+:root{
+  color-scheme:dark;
+  --bg:#06131d; --bg2:#0b1f2d; --glass:rgba(7,22,33,.78); --line:rgba(127,227,255,.18); --line2:rgba(127,227,255,.4);
+  --ink:#e6f1f7; --mute:#8fb0c2; --soft:#c6d9e3;
+  --cy:#7fe3ff; --qz:#efe2c4; --co:#ff6b57; --amb:#f2b35b; --wet:#a07a4e; --water:#3fb0dc;
+  --f-disp:"Unbounded",system-ui,sans-serif; --f-body:"Golos Text",system-ui,sans-serif;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box;min-width:0}
+button{font:inherit;color:inherit}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
+#gl.drag{cursor:grabbing}
+.hud{position:fixed;z-index:10;pointer-events:none}
+.hud > *{pointer-events:auto}
+
+/* top bar */
+.top{top:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));pointer-events:none}
+.brand{pointer-events:auto;display:flex;flex-direction:column;gap:2px}
+.brand b{font:700 15px/1.1 var(--f-disp);letter-spacing:.01em}
+.brand span{font-size:12px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+.tools{display:flex;gap:6px;pointer-events:auto;flex-wrap:nowrap;justify-content:flex-end;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;min-width:40px;padding:0 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;font-size:13px;font-weight:500;transition:border-color .2s,background .2s}
+.btn:hover{border-color:var(--line2)}
+.btn:focus-visible,.step:focus-visible,.pill:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+.btn[aria-pressed=true]{background:var(--cy);color:#04121b;border-color:var(--cy)}
+.btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* phase chip */
+.chip{position:fixed;z-index:10;left:50%;top:calc(env(safe-area-inset-top,0px) + 66px);transform:translateX(-50%);
+  display:flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--line);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;pointer-events:none;transition:opacity .4s}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--cy);box-shadow:0 0 10px var(--cy);flex:none;animation:pulse 1.6s infinite}
+.chip em{font-style:normal;color:var(--qz);font-variant-numeric:tabular-nums}
+@keyframes pulse{50%{opacity:.35}}
+
+/* panel */
+.panel{position:fixed;z-index:10;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 70px);bottom:calc(env(safe-area-inset-bottom,0px) + 104px);width:min(372px,calc(100vw - 32px));
+  display:flex;flex-direction:column;border-radius:18px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);overflow:hidden}
+.pscroll{overflow-y:auto;padding:20px 20px 18px;scrollbar-width:thin;scrollbar-color:rgba(127,227,255,.25) transparent}
+.eyebrow{font:500 11px/1.2 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--cy);display:flex;gap:8px;align-items:center}
+.eyebrow .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1px solid var(--cy);font-size:11px;letter-spacing:0}
+.panel h1{font:700 clamp(20px,2.2vw,25px)/1.12 var(--f-disp);margin:12px 0 10px;text-wrap:balance}
+.lead{color:var(--soft);margin:0 0 14px}
+.sect{font:500 11px/1 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:16px 0 8px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:6px;counter-reset:s}
+.steps li{position:relative;padding-left:28px;color:var(--soft);font-size:14px;line-height:1.4;counter-increment:s}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:19px;height:19px;border-radius:6px;background:rgba(127,227,255,.12);color:var(--cy);font:600 11px/19px var(--f-body);text-align:center}
+.nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.num{padding:10px 12px;border-radius:12px;background:rgba(127,227,255,.06);border:1px solid var(--line)}
+.num b{display:block;font:700 16px/1.15 var(--f-disp);color:var(--qz);font-variant-numeric:tabular-nums}
+.num span{display:block;font-size:12px;color:var(--mute);margin-top:4px;line-height:1.3}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12.5px;padding:3px 9px;border-radius:999px;background:rgba(127,227,255,.08);color:var(--cy);border:1px solid rgba(127,227,255,.22)}
+.tag.n{background:rgba(239,226,196,.07);color:var(--qz);border-color:rgba(239,226,196,.22)}
+.tag.w{background:rgba(255,107,87,.1);color:var(--co);border-color:rgba(255,107,87,.3)}
+.note{font-size:12.5px;color:var(--mute);margin:14px 0 0;padding:10px 12px;border-radius:10px;border-left:2px solid var(--co);background:rgba(255,107,87,.06)}
+.legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;font-size:13px;color:var(--soft)}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{width:10px;height:10px;border-radius:50%;flex:none}
+.pfoot{display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--line);align-items:center}
+.pfoot .btn{flex:1}
+.pfade{animation:pf .5s ease both}
+@keyframes pf{from{opacity:.0;transform:translateY(6px)}}
+.ptoggle{display:none}
+
+/* timeline */
+.bar{left:0;right:0;bottom:0;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px));
+  display:flex;gap:10px;align-items:center;background:linear-gradient(to top,rgba(6,19,29,.92) 40%,rgba(6,19,29,0));pointer-events:auto}
+.ctrl{display:flex;gap:6px;flex:none}
+.ctrl .btn{width:44px;height:44px;padding:0}
+.ctrl .play{background:var(--cy);color:#04121b;border-color:var(--cy)}
+.ctrl .play svg{fill:currentColor;stroke:none}
+.steps-bar{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px 2px;scroll-behavior:smooth}
+.steps-bar::-webkit-scrollbar{display:none}
+.step{position:relative;flex:1 0 auto;min-width:88px;min-height:52px;padding:7px 10px 9px;border-radius:12px;border:1px solid var(--line);background:var(--glass);cursor:pointer;text-align:left;overflow:hidden;transition:border-color .25s,background .25s}
+.step b{display:block;font:500 10.5px/1 var(--f-disp);color:var(--mute);letter-spacing:.06em}
+.step span{display:block;font-size:12.5px;margin-top:5px;white-space:nowrap;color:var(--soft)}
+.step::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,0)*100%);background:var(--cy)}
+.step.done{border-color:rgba(127,227,255,.3)}
+.step.done b{color:var(--cy)}
+.step[aria-current=step]{border-color:var(--cy);background:rgba(127,227,255,.14)}
+.step[aria-current=step] b{color:var(--cy)}
+.step[aria-current=step] span{color:var(--ink)}
+
+/* labels */
+#labs{position:fixed;inset:0;z-index:8;pointer-events:none;overflow:hidden}
+.co{position:absolute;left:0;top:0;opacity:0;transition:opacity .45s;will-change:transform}
+.co.on{opacity:1}
+.co .dot{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--cy);box-shadow:0 0 0 4px rgba(127,227,255,.18),0 0 14px var(--cy)}
+.co .stem{position:absolute;left:0;bottom:0;width:1px;height:34px;background:linear-gradient(to top,var(--cy),rgba(127,227,255,.2))}
+.co .box{position:absolute;left:-8px;bottom:34px;transform:translateX(0);padding:6px 10px;border-radius:9px;background:rgba(6,19,29,.86);border:1px solid rgba(127,227,255,.38);white-space:nowrap;font-size:12.5px;line-height:1.3}
+.co.l .box{left:auto;right:-8px}
+.co .box b{display:block;color:var(--cy);font-weight:600}
+.co .box small{color:var(--mute);font-size:11.5px}
+.pill{position:absolute;left:0;top:0;transform:translate(-50%,-100%);display:flex;align-items:center;gap:7px;padding:5px 11px 5px 5px;border-radius:999px;background:rgba(6,19,29,.86);border:1px solid var(--line2);
+  font-size:12.5px;white-space:nowrap;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .45s,border-color .2s;color:var(--ink)}
+.pill.on{opacity:1;pointer-events:auto}
+.pill:hover{border-color:var(--cy)}
+.pill b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--cy);color:#04121b;font:600 11px var(--f-body)}
+.hint{position:fixed;z-index:9;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 92px);font-size:12px;color:var(--mute);pointer-events:none;transition:opacity .6s}
+
+@media (max-width:760px){
+  .brand span{display:none}
+  .tools .lbl{display:none}
+  .chip{top:calc(env(safe-area-inset-top,0px) + 62px);font-size:12px}
+  .panel{top:auto;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));width:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);max-height:44vh;border-radius:16px}
+  .panel.min{max-height:none}
+  .panel.min .more{display:none}
+  .pscroll{padding:14px 16px 12px}
+  .panel h1{font-size:18px;margin:8px 0 6px}
+  .lead{font-size:14px;margin-bottom:8px}
+  .panel.min .lead{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+  .pfoot{display:none}
+  .ptoggle{display:inline-flex;position:absolute;right:10px;top:10px;min-height:34px;min-width:34px;padding:0 10px;font-size:12px}
+  .bar{padding-top:8px;gap:8px}
+  .ctrl .btn{width:40px;height:40px}
+  .ctrl .prev,.ctrl .next{display:none}
+  .step{min-width:74px;min-height:46px;padding:6px 8px 8px}
+  .step span{font-size:11.5px}
+  .hint{display:none}
+  .co .box{font-size:11px;padding:4px 8px}
+  .co .box small{display:none}
+  .co .stem{height:22px}.co .box{bottom:22px}
+}
+@media (prefers-reduced-motion:reduce){.chip i{animation:none}.pfade{animation:none}}
+</style>
+
+<canvas id="gl" tabindex="0" aria-label="3D-модель цепочки производства проппанта. Тяните, чтобы повернуть, колесо или щипок — масштаб."></canvas>
+<div id="labs" aria-hidden="true"></div>
+
+<header class="hud top">
+  <div class="brand"><b>Путь кварцевого проппанта</b><span>от пласта до трещины ГРП</span></div>
+  <div class="tools">
+    <button class="btn" id="bOver" aria-pressed="false" title="Вся цепочка сверху (O)"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg><span class="lbl">Вся цепочка</span></button>
+    <button class="btn" id="bSpeed" title="Скорость анимации">1×</button>
+    <button class="btn" id="bFull" title="Во весь экран (F)" aria-label="Во весь экран"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</header>
+
+<div class="chip" id="chip"><i></i><span id="chipT">Загрузка сцены…</span></div>
+
+<aside class="panel" id="panel" aria-live="polite">
+  <button class="btn ptoggle" id="bMin" aria-expanded="true">Свернуть</button>
+  <div class="pscroll" id="pbody"></div>
+  <div class="pfoot">
+    <button class="btn" id="bPrev2">← Назад</button>
+    <button class="btn" id="bNext2">Дальше →</button>
+  </div>
+</aside>
+
+<div class="hint" id="hint">Тяните — поворот · колесо — масштаб · ← → — этапы</div>
+
+<nav class="hud bar" aria-label="Этапы цепочки">
+  <div class="ctrl">
+    <button class="btn prev" id="bPrev" aria-label="Предыдущий этап"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="btn play" id="bPlay" aria-label="Пауза"><svg viewBox="0 0 24 24" id="playIco"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg></button>
+    <button class="btn next" id="bNext" aria-label="Следующий этап"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+  </div>
+  <div class="steps-bar" id="stepsBar"></div>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+if(!window.THREE){document.getElementById('chipT').textContent='Не удалось загрузить 3D-движок. Проверьте соединение и обновите страницу.';return;}
+
+/* ================= КОНТЕНТ ================= */
+const STAGES=[
+{n:'Разведка',title:'Геология и разведка',state:'Песок в недрах, под слоем вскрыши',
+ lead:'Годится не любой кварц. Нужны однородные, хорошо окатанные пески с высоким содержанием кварца и минимумом глины, полевого шпата и карбонатов. Участок разбуривают по сетке, поднимают керн и опробуют каждый интервал.',
+ steps:['Бурение разведочных скважин по сетке','Описание керна и отбор проб по интервалам','Гранулометрия, химия SiO₂ · Fe₂O₃ · Al₂O₃ · CaO, минералогия XRD','Испытание проб по ISO 13503-2 в аккредитованной лаборатории','Подсчёт и утверждение запасов'],
+ nums:[['≥ 0,6','сферичность и округлость сырья'],['15–20+ лет','запасов под работу завода']],
+ data:['мощность пласта','вскрыша','запасы, т','гранулометрия','химия','XRD'],
+ need:['Право недропользования','Буровая и керн','Аккредитованная лаборатория'],
+ note:'Пробы проверяют на соответствие API/ISO до инвестиций в завод. Если сырьё не проходит по сферичности или прочности, обогащение его не спасёт.',
+ cam:[-118,2.5,0,27,-.35,1.1], mark:[-119,13,0],
+ labs:[[[-124,11.8,-2],'Буровая установка','разведочная скважина'],[[-112,8.4,3],'Разрез участка','почва · вскрыша · песок · подошва'],[[-118.6,.9,2.6],'Керновые ящики','интервалы → в лабораторию'],[[-129,1.3,6],'Сетка скважин','оконтуривает залежь']]},
+{n:'Карьер',title:'Добыча в карьере',state:'Сырой песок с глиной и комьями',
+ lead:'Пески добывают открытым способом. Снимают почву и вскрышу, затем уступами вынимают продуктивный пласт. Экскаватор грузит самосвалы, они по съезду везут сырой песок на фабрику.',
+ steps:['Почвенный слой снимают в бурт для рекультивации','Вскрышу вывозят в отвал','Продуктивный пласт вынимают уступами','Самосвалы везут сырьё по съезду на приёмку'],
+ nums:[['20 т','самосвал в типовом парке по планам горных работ РК'],['м³/т','коэффициент вскрыши задаёт экономику']],
+ data:['производительность, т/год','коэф. вскрыши','потери и разубоживание','влажность сырья'],
+ need:['Лицензия на добычу','План горных работ','ОВОС и экоразрешение','Водоотвод и дороги'],
+ cam:[-88,-2,1,36,.3,.92], mark:[-92,6,0],
+ labs:[[[-99,-1.5,-3],'Забой','уступная выемка'],[[-95,1.4,-1.5],'Экскаватор','грузит самосвалы'],[[-84,-1.6,6],'Съезд','выезд из карьера'],[[-92,-.2,-8.6],'Уступы','по 1,3 м в модели']]},
+{n:'Приёмка',title:'Приёмка и грохочение',state:'Сырой песок, отсеянный от камней',
+ lead:'Самосвал разгружается в приёмный бункер с колосниковой решёткой. Питатель подаёт сырьё на вибрационный грохот: он отбивает камни, корни и комья глины крупнее товарных фракций. Дальше песок идёт в мокрую часть.',
+ steps:['Разгрузка в бункер через колосники','Питатель равномерно подаёт сырьё','Вибрационный грохот отсеивает крупное','Ленточный конвейер везёт песок на промывку'],
+ nums:[['т/ч','производительность приёмки задаёт ритм всей фабрики'],['отсев','камни и комья в отвал']],
+ data:['выход отсева, %','крупность после грохота','т/ч на конвейере'],
+ need:['Бункер с колосниками','Питатель','Вибрационный грохот','Конвейеры'],
+ cam:[-67,2.5,3.5,26,2.55,1.0], mark:[-69,8,4],
+ labs:[[[-70,3.6,4.2],'Приёмный бункер','с колосниковой решёткой'],[[-66.6,3.1,3.6],'Вибрационный грохот','отсев крупного'],[[-61.5,4.6,2.4],'Конвейер','на промывку']]},
+{n:'Промывка',title:'Промывка и оттирка',state:'Пульпа: 65–85% твёрдого',
+ lead:'В скруббере-аттриторе плотная пульпа трётся сама о себя. Лопасти гоняют её встречными потоками, и зёрна счищают друг с друга глину и плёнки оксидов железа. Чистое зерно даёт меньше мутности и кислотной растворимости.',
+ steps:['Песок смешивают с оборотной водой в пульпу','Каскад аттриторов: встречные лопасти, интенсивное трение','Глина и плёнки переходят в воду','Пульпа уходит насосом на гидроциклоны'],
+ nums:[['65–85%','твёрдого в пульпе аттритора'],['≤ 250 FTU','целевая мутность готового песка']],
+ data:['содержание шлама','мутность до / после','время оттирки','расход энергии'],
+ need:['Аттриционные скрубберы','Насосы пульпы','Оборотная вода'],
+ cam:[-51,3.5,2,22,.3,1.08], mark:[-52,9.2,2],
+ labs:[[[-56,6.4,2],'Скруббер-аттритор','встречные лопасти'],[[-48,5.4,3.6],'Пульпа','зерно о зерно'],[[-52,7.6,0],'Оборотная вода','из сгустителя']]},
+{n:'Циклоны',title:'Гидроциклоны и оборот воды',state:'Пульпа делится: пески вниз, слив вверх',
+ lead:'В гидроциклоне пульпа закручивается. Тяжёлый песок прижимается к стенке и уходит вниз, а лёгкая глина с водой поднимается в слив. Слив идёт в сгуститель, оттуда около 90% воды возвращается в скрубберы, а шлам — в шламохранилище.',
+ steps:['Насос подаёт пульпу в гидроциклоны по касательной','Пески выходят через нижнюю насадку','Слив с глиной идёт в радиальный сгуститель','Осветлённая вода возвращается в оборот, шлам — в хранилище'],
+ nums:[['~90%','воды возвращается в оборот'],['м³/т','расход свежей воды — ключевой лимит площадки']],
+ data:['выход товарного, %','плотность слива','расход воды, м³/т','мутность'],
+ need:['Гидроциклоны','Сгуститель','Шламохранилище','Источник воды'],
+ cam:[-41,3.5,-6,33,.5,.95], mark:[-38,14,2],
+ labs:[[[-38,10.8,3.2],'Гидроциклоны','пески вниз, слив вверх'],[[-40,2.6,-12],'Сгуститель','осветляет воду'],[[-46,.2,-22],'Шламохранилище','глина и мелочь'],[[-46,1.6,-6],'Возврат воды','в скрубберы']]},
+{n:'Обезвоживание',title:'Обезвоживание и склад',state:'Влажный отмытый песок',
+ lead:'Гидроклассификатор отделяет лишнюю мелочь, обезвоживающий грохот отжимает воду. Влажный песок штабелёр укладывает в склад: там он дренирует перед сушкой, а фабрика получает буфер между мокрой и сухой частью.',
+ steps:['Гидроклассификатор снимает лишнюю мелочь','Обезвоживающий грохот отжимает воду','Штабелёр формирует склад влажного песка','Подштабельный конвейер подаёт песок в сушилку'],
+ nums:[['буфер','склад развязывает мокрую и сухую часть'],['%','влажность перед сушкой определяет расход газа']],
+ data:['влажность после грохота','объём склада','выход мелочи'],
+ need:['Гидроклассификатор','Обезвоживающий грохот','Штабелёр и площадка склада'],
+ cam:[-26,3,2,25,-.3,1.08], mark:[-24,11,2],
+ labs:[[[-33,4.4,-2],'Гидроклассификатор','отделяет мелочь'],[[-31,4.1,2],'Обезвоживающий грохот','отжим воды'],[[-22,5.6,2],'Склад влажного песка','дренирует перед сушкой']]},
+{n:'Сушка',title:'Сушка',state:'Сухой горячий песок',
+ lead:'Песок сушат горячим воздухом во вращающемся барабане или в аппарате кипящего слоя, обычно на газе. Сухое зерно нужно для точного рассева и хранения: влажный песок слипается и даёт брак по фракции.',
+ steps:['Горелка греет воздух на входе в барабан','Лопасти поднимают и пересыпают песок через горячий поток','Сухой песок выходит в разгрузочную камеру','Рукавный фильтр ловит пыль, чистый газ уходит в трубу'],
+ nums:[['газ','одна из главных статей затрат завода'],['SiO₂-пыль','вдыхаемый кремнезём опасен для лёгких']],
+ data:['влажность вход / выход','газ, м³/т','температура','запылённость'],
+ need:['Сушилка и газ','Рукавный фильтр, аспирация','Контроль влажности','СИЗ'],
+ note:'На сушке появляется кварцевая пыль. Нужны пылеулавливание, аспирация и средства защиты органов дыхания.',
+ cam:[-4,3,-2,27,.38,1.06], mark:[-6,8.5,0],
+ labs:[[[-13.2,4.6,0],'Горелка','газ, горячий воздух'],[[-6,4.8,0],'Барабанная сушилка','вращается с наклоном'],[[3,7.4,-8],'Рукавный фильтр','улавливает пыль'],[[6,12.4,-8],'Дымовая труба','очищенный газ']]},
+{n:'Рассев',title:'Сухой рассев на фракции',state:'Песок рассеян по товарным маркам',
+ lead:'Ковшовый элеватор поднимает сухой песок на башню вибросит. Каждая сетка задерживает зёрна крупнее своего номера. Цифры марки — номера сит: зерно 20/40 проходит сито № 20 и остаётся на № 40.',
+ steps:['Элеватор поднимает песок на верх башни','Дека 20 mesh снимает крупное в отсев','Деки 40, 70 и 140 mesh отдают марки 20/40, 40/70 и 100 mesh','Поддон собирает пыль и мелочь','Галерея разводит марки по силосам'],
+ nums:[['≥ 90%','пробы между заданными ситами'],['≤ 0,1%','крупнее верхнего сита'],['≤ 1%','мельче нижнего сита'],['4 деки','в модели башни']],
+ data:['ситовый анализ','медианный диаметр','выход по маркам','износ сеток'],
+ need:['Многодечные вибросита','Калиброванные сетки','Элеватор и галерея'],
+ cam:[17,9,0,27,-.48,1.18], mark:[16,20,0],
+ labs:[[[8,17,0],'Ковшовый элеватор','подъём на башню'],[[18.6,13.6,2.5],'20 mesh','крупное → в отсев'],[[18.6,11.6,2.5],'40 mesh','→ марка 20/40'],[[18.6,9.6,2.5],'70 mesh','→ марка 40/70'],[[18.6,7.6,2.5],'140 mesh','→ 100 mesh']]},
+{n:'Лаборатория',title:'Лаборатория и паспорт партии',state:'Проба партии на испытаниях',
+ lead:'Каждую партию испытывают. Ситовый анализ — 10 минут на встряхивателе Ro-Tap. Сферичность и округлость оценивают по таблице Крумбейна. Кислотная растворимость в смеси 12% HCl + 3% HF показывает примеси, мутность — пыль и глину.',
+ steps:['Ситовый анализ на Ro-Tap, 10 минут','Форма зерна под микроскопом: таблица Крумбейна','Кислотная растворимость, 12% HCl + 3% HF','Мутность в турбидиметре','Раздавливание прессом: доля мелочи при заданном напряжении'],
+ nums:[['≥ 0,6','сферичность и округлость'],['≤ 2%','кислотная растворимость, марки ≥ 30/50'],['≤ 250 FTU','мутность'],['≤ 14%','мелочи для 20/40 при 4000 psi (ориентир API RP 56)']],
+ data:['% в фракции','K-value','плотность','кластеры','проводимость'],
+ need:['Сита и Ro-Tap','Турбидиметр','Кислотная баня','Пресс с ячейкой','Внешний сертификат'],
+ cam:[26,4.2,-14,21,.22,1.1], mark:[26,13.5,-14],
+ labs:[[[26,11.2,-14],'Зерно под микроскопом','сферичность ≈ 0,8 · округлость ≈ 0,7'],[[22.6,3.6,-14.8],'Ro-Tap','стопка сит, 10 мин'],[[25.4,4.1,-14.8],'Пресс','тест на раздавливание'],[[28,2.6,-14.8],'Турбидиметр','мутность, FTU']]},
+{n:'Логистика',title:'Силосы и логистика',state:'Товарный проппант в силосах',
+ lead:'Готовый песок хранят в силосах по маркам и грузят в хопперы. Песок дешёвый и тяжёлый, поэтому цену на скважине определяет доставка. Каждая лишняя перевалка дробит зёрна и поднимает мутность.',
+ steps:['Галерея распределяет марки по силосам','Вагоны-хопперы загружаются под силосами','Состав идёт до перевалки у куста','Пневматикой песок перегружают в ёмкости флота ГРП'],
+ nums:[['~$41','за короткую тонну на карьере (США, Northern White)'],['до $120','та же тонна на устье в Техасе']],
+ data:['тариф, ₸/т·км','число перевалок','мутность после доставки'],
+ need:['Силосы и фасовка','Ж/д тупик или перевозчик','Защита от влаги','Паспорт партии'],
+ cam:[46,6,0,54,.42,1.0], mark:[32,21,0],
+ labs:[[[26,16.6,0],'Силос 20/40','основная марка'],[[32,16.6,0],'Силос 40/70','сланцы, многостадийный ГРП'],[[38,16.6,0],'Силос 100 mesh','первые порции'],[[62,3.6,0],'Вагоны-хопперы','к кусту скважин']]},
+{n:'ГРП',title:'ГРП на кусте',state:'Закачка смеси в скважину',
+ lead:'На кустовой площадке работает флот ГРП. Из ёмкостей песок идёт в блендер, тот смешивает его с жидкостью разрыва, насосные установки через манифольд закачивают смесь в скважину. Трещины делают стадиями, от носка ствола к пятке.',
+ steps:['Подушка: чистая жидкость раскрывает трещину','Мелкая фракция 100 mesh заходит в узкие ветви','Основная фракция строит каркас трещины','Продавка вытесняет песок из ствола в пласт','Пробка отсекает стадию, флот переходит к следующей'],
+ nums:[['≤ ~40 МПа','давление смыкания для кварца (≈ 6000 psi)'],['кг/м³','концентрацию песка поднимают ступенями']],
+ data:['давление смыкания','т проппанта на стадию','концентрация, кг/м³','число стадий'],
+ need:['Дизайн ГРП','Подрядчик с флотом','Объём песка на стадию'],
+ cam:[100,2,1,36,-.5,.95], mark:[100,9,0],
+ labs:[[[90.5,7,-7],'Ёмкости с песком','по маркам'],[[91,3,-2.5],'Блендер','песок + жидкость'],[[101,1.8,4.6],'Насосные установки','высокое давление'],[[101,1.6,0],'Манифольд','сбор потока'],[[112,4.8,0],'Устье скважины','фонтанная арматура']]},
+{n:'Трещина',title:'В трещине: ради чего всё',state:'Проппант держит трещину открытой',
+ lead:'Горное давление пытается сомкнуть трещину. Зёрна держат её открытой, нефть и газ идут по порам между ними. Отсюда все требования к песку: круглое зерно даёт больше пор, прочное — меньше мелочи, чистое — поры не забиты.',
+ steps:['Жидкость раскрывает трещины стадиями от носка к пятке','Песок заносится в трещину и оседает','Давление сбрасывают — трещина смыкается на пачку зёрен','Нефть и газ притекают по каркасу к стволу'],
+ nums:[['мД·м','проводимость трещины — итоговая мера'],['до +23,8%','добычи в моделировании для Атырауского региона с облегчённым проппантом']],
+ data:['проводимость','проницаемость пачки','прирост дебита','вынос проппанта'],
+ need:['Прочный, круглый, чистый песок','Верная фракция под пласт'],
+ cam:[138,-31,0,46,.72,1.3], mark:[140,-23,0],
+ labs:[[[160,-30.6,0],'Горизонтальный ствол','носок → пятка'],[[136,-25.4,0],'Трещина ГРП','раскрыта песком'],[[150,-38.6,6],'Целевой пласт','нефть в порах'],[[112,-12,0],'Вертикальный ствол','к устью']]}
+];
+const OVER={title:'Вся цепочка на одной площадке',
+ lead:'Двенадцать этапов от разведки участка до трещины в пласте. Песок идёт по конвейерам слева направо: бурый — сырой, светлый — сухой, дальше — по маркам. Нажмите на любой этап на схеме или запустите тур.',
+ legend:[['var(--wet)','сырой и влажный песок'],['var(--qz)','сухой песок 20/40'],['#e0b46a','марка 40/70'],['#c98b5a','марка 100 mesh'],['var(--water)','оборотная вода'],['#6b4b33','шлам'],['var(--co)','флот ГРП'],['var(--amb)','нефть и газ']],
+ cam:[18,-8,0,250,.1,.84]};
+
+/* ================= ДВИЖОК ================= */
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canvas=document.getElementById('gl');
+let renderer;
+try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}
+catch(e){document.getElementById('chipT').textContent='Браузер не поддерживает WebGL — 3D-сцена недоступна.';return;}
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const scene=new THREE.Scene();
+const BGC=0x06131d;scene.background=new THREE.Color(BGC);
+scene.fog=new THREE.FogExp2(BGC,.006);
+const cam=new THREE.PerspectiveCamera(40,1,.1,900);
+
+scene.add(new THREE.HemisphereLight(0xa6dcff,0x0b1a24,.75));
+const sun=new THREE.DirectionalLight(0xfff1dc,1.0);sun.position.set(60,90,50);scene.add(sun);
+const rim=new THREE.DirectionalLight(0x7fe3ff,.35);rim.position.set(-80,40,-60);scene.add(rim);
+
+const CY=0x7fe3ff;
+const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.62,metalness:.3},o||{}));
+const MET=M(0x2c4858,{metalness:.55,roughness:.45}), STEEL=M(0x6f8b9a,{metalness:.6,roughness:.38}), CONC=M(0x2c3e4a,{roughness:.9,metalness:.05});
+const GLASS=M(0x7fe3ff,{transparent:true,opacity:.09,depthWrite:false,roughness:.1,metalness:0,side:THREE.DoubleSide});
+const YEL=M(0xe0a43a), CORM=M(0xff6b57,{roughness:.5}), QZM=M(0xefe2c4,{roughness:.85,metalness:0}), WETM=M(0x8c6a44,{roughness:.95,metalness:0}), DARK=M(0x12232d,{roughness:.8});
+const WHITE=M(0xd9e4ea,{roughness:.5}), TEAL=M(0x2b6f8a,{roughness:.5});
+const WATER=M(0x2f9ec4,{transparent:true,opacity:.82,emissive:0x0b3a4a,roughness:.15,metalness:.1});
+const PIPE=M(0x3c7f9c,{transparent:true,opacity:.42,depthWrite:false,roughness:.3});
+
+const ups=[];
+const V=new THREE.Vector3(), V2=new THREE.Vector3();
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), lerp=(a,b,t)=>a+(b-a)*t, sm=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const hash=i=>{const s=Math.sin(i*127.1+311.7)*43758.5453;return s-Math.floor(s);};
+
+/* группы этапов — у каждой свой материал контуров для подсветки */
+const G=STAGES.map(()=>{const g=new THREE.Group();g.userData.lm=new THREE.LineBasicMaterial({color:CY,transparent:true,opacity:.3,depthWrite:false});scene.add(g);return g;});
+function E(m,g){const e=new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry,28),g.userData.lm);m.add(e);return m;}
+function add(g,geo,mat,x,y,z,edge){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);g.add(m);if(edge!==false)E(m,g);return m;}
+function box(g,w,h,d,mat,x,y,z,edge){return add(g,new THREE.BoxGeometry(w,h,d),mat,x,y,z,edge);}
+function cyl(g,rt,rb,h,mat,x,y,z,seg,edge,open){return add(g,new THREE.CylinderGeometry(rt,rb,h,seg||20,1,!!open),mat,x,y,z,edge);}
+function wire(g,geo,x,y,z){const l=new THREE.LineSegments(new THREE.WireframeGeometry(geo),g.userData.lm);l.position.set(x,y,z);g.add(l);return l;}
+function beam(g,a,b,w,h,mat,edge){const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b);const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,A.distanceTo(B)),mat);m.position.copy(A).add(B).multiplyScalar(.5);m.lookAt(B);g.add(m);if(edge!==false)E(m,g);return m;}
+function conveyor(g,a,b,w){beam(g,[a[0],a[1]-.25,a[2]],[b[0],b[1]-.25,b[2]],w||.8,.22,MET);const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b);const n=Math.max(1,Math.floor(A.distanceTo(B)/3.5));
+ for(let i=0;i<=n;i++){V.lerpVectors(A,B,i/n);const h=V.y-.35;if(h>.6)box(g,.14,h,.14,STEEL,V.x,h/2,V.z,false);}}
+function pipe(g,pts,r,mat){const cp=new THREE.CurvePath();for(let i=1;i<pts.length;i++)cp.add(new THREE.LineCurve3(new THREE.Vector3(...pts[i-1]),new THREE.Vector3(...pts[i])));
+ const m=new THREE.Mesh(new THREE.TubeGeometry(cp,pts.length*12,r,10,false),mat||PIPE);g.add(m);return m;}
+
+/* частицы */
+const dotTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const gr=x.createRadialGradient(32,32,0,32,32,32);
+ gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.5,'rgba(255,255,255,.85)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
+function pts(n,size,o){o=o||{};const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3));g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3).fill(1),3));
+ const p=new THREE.Points(g,new THREE.PointsMaterial({size,map:dotTex,vertexColors:true,transparent:true,opacity:o.op==null?1:o.op,depthWrite:false,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending,alphaTest:.02}));
+ p.frustumCulled=false;scene.add(p);return p;}
+function mkPath(arr){const P=arr.map(a=>a.isVector3?a.clone():new THREE.Vector3(...a));const L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+P[i].distanceTo(P[i-1]));return{P,L,T:L[L.length-1]};}
+function at(pa,d,out){d=clamp(d,0,pa.T);let i=1;while(i<pa.L.length-1&&pa.L[i]<d)i++;const s=pa.L[i]-pa.L[i-1]||1;return out.copy(pa.P[i-1]).lerp(pa.P[i],(d-pa.L[i-1])/s);}
+const C=h=>new THREE.Color(h);
+const COL={wet:C(0x9a7448),wet2:C(0x7d5c3a),qz:C(0xefe2c4),f2:C(0xe0b46a),f3:C(0xc98b5a),rej:C(0x6d7a80),water:C(0x3fb0dc),water2:C(0x7fd6f2),slime:C(0x6b4b33),oil:C(0xf2b35b),flame:C(0xffb347),flame2:C(0xff5a2a),smoke:C(0xcfdbe2),bg:C(BGC)};
+const FR=[COL.qz,COL.f2,COL.f3];
+function setC(arr,i,c){arr[i*3]=c.r;arr[i*3+1]=c.g;arr[i*3+2]=c.b;}
+function setP(arr,i,x,y,z){arr[i*3]=x;arr[i*3+1]=y;arr[i*3+2]=z;}
+/* поток вдоль пути: colorFn(d,i,pos) и shape(d,i,pos,t) */
+function flow(pa,n,spd,size,colorFn,jit,shape,o){const p=pts(n,size,o);const pos=p.geometry.attributes.position.array,col=p.geometry.attributes.color.array;const J=[];for(let i=0;i<n*3;i++)J.push((hash(i+n*7.3)-.5)*(jit||0));
+ const st={p,on:true};
+ ups.push(t=>{if(!st.on){p.visible=false;return;}p.visible=true;for(let i=0;i<n;i++){const d=((t*spd+i/n*pa.T)%pa.T+pa.T)%pa.T;at(pa,d,V);V.x+=J[i*3];V.y+=J[i*3+1]*.5;V.z+=J[i*3+2];if(shape)shape(d,i,V,t);setP(pos,i,V.x,V.y,V.z);const c=colorFn(d,i,V,t);if(c)setC(col,i,c);}
+  p.geometry.attributes.position.needsUpdate=true;p.geometry.attributes.color.needsUpdate=true;});
+ return st;}
+
+/* ================= РЕЛЬЕФ ================= */
+function H(x,z){let y=0;
+ const qx=(x+92)/13,qz=z/9;const d=Math.pow(Math.pow(Math.abs(qx),4)+Math.pow(Math.abs(qz),4),.25);
+ if(d<1){y=-Math.min(4,Math.floor((1-d)*6.2))*1.3;if(z>4.4&&z<7.8&&x>-94&&x<-78.6){y=-5.2*clamp((x+79)/-13,0,1);}}
+ const ex=(x+46)/7,ez=(z+22)/5,e2=ex*ex+ez*ez;if(e2<1)y=Math.min(y,-1.1*(1-e2));
+ const az=Math.abs(z);if(az>24)y+=(Math.sin(x*.05)+Math.sin(z*.09+x*.021)*.8+1.9)*(az-24)*.13;
+ if(x<-140||x>176)y+=(Math.abs(x<0?x+140:x-176))*.25;
+ return y;}
+function pitStep(x,z){const qx=(x+92)/13,qz=z/9;const d=Math.pow(Math.pow(Math.abs(qx),4)+Math.pow(Math.abs(qz),4),.25);return d<1?Math.min(4,Math.floor((1-d)*6.2)):-1;}
+{const W=360,D=136,SX=540,SZ=204;const geo=new THREE.PlaneGeometry(W,D,SX,SZ);geo.rotateX(-Math.PI/2);geo.translate(8,0,0);
+ const p=geo.attributes.position,cols=new Float32Array(p.count*3);const g0=C(0x0c2231),g1=C(0x163447),grid=C(0x1f4a60),road=C(0x1a2f3b),sandC=[C(0x5d4a38),C(0x9b7a50),C(0xc9a46a),C(0xb48a52),C(0xd8bd85)],mud=C(0x3b2c20),c=new THREE.Color();
+ for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);const y=H(x,z);p.setY(i,y);const st=pitStep(x,z);
+  if(st>=0){c.copy(sandC[st]);if(z>4.4&&z<7.8&&x>-94&&x<-78.6)c.lerp(C(0x7a6448),.6);}
+  else if((x+46)**2/49+(z+22)**2/25<1.2)c.copy(mud);
+  else{c.copy(g0).lerp(g1,clamp(y/14,0,1));const n=hash(Math.floor(x*.7)*31+Math.floor(z*.7));c.multiplyScalar(.92+n*.12);
+   const onRoad=(Math.abs(z-11)<1.4&&x>-132&&x<114)||(z>4.6&&z<7.6&&x>-79&&x<-62)||(Math.abs(z)<1.6&&x>20&&x<88);
+   if(onRoad)c.copy(road);else if(Math.abs(y)<.3){const gx=((x%10)+10)%10,gz=((z%10)+10)%10;if(gx<.55||gz<.55)c.lerp(grid,.55);}}
+  cols[i*3]=c.r;cols[i*3+1]=c.g;cols[i*3+2]=c.b;}
+ geo.setAttribute('color',new THREE.BufferAttribute(cols,3));geo.computeVertexNormals();
+ const t=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,flatShading:true}));scene.add(t);}
+
+/* ================= 0 · РАЗВЕДКА ================= */
+{const g=G[0];
+ box(g,4.4,.8,2.8,MET,-124,.4,-2);box(g,1.8,1.4,1.6,TEAL,-126,1.5,-2);
+ const mg=new THREE.CylinderGeometry(.35,.85,10,4,7,true);wire(g,mg,-124,5.8,-2).rotation.y=Math.PI/4;
+ box(g,1.2,.5,1.2,STEEL,-124,11,-2);
+ cyl(g,.07,.07,10,STEEL,-124,5.3,-2,8,false);
+ const td=box(g,.8,.7,.8,CORM,-124,6,-2);
+ ups.push(t=>{td.position.y=3+((t*.6)%1)*6.5;td.rotation.y=t*4;});
+ // керн
+ const core=new THREE.Group();scene.add(core);const lay=[[.5,0x3b2f22],[1.3,0x6b5a48],[2.3,0xe2cf9f],[.8,0x4a535b]];let yy=0;
+ lay.forEach(([h,c])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,h,16),M(c,{roughness:.9,metalness:0}));m.position.y=-(yy+h/2);yy+=h;core.add(m);E(m,g);});
+ ups.push(t=>{const u=(t%10)/10;if(u<.42){const k=sm(u/.42);core.position.set(-121.6,lerp(-1,5.4,k),-2);core.rotation.set(0,t*.5,0);}
+  else if(u<.72){const k=sm((u-.42)/.3);core.position.set(lerp(-121.6,-118.6,k),lerp(5.4,.95,k),lerp(-2,1.4,k));core.rotation.set(0,0,lerp(0,-Math.PI/2,k));}
+  else{core.position.set(-118.6,.95,1.4);core.rotation.set(0,0,-Math.PI/2);}
+  core.visible=u<.97;});
+ for(let i=0;i<3;i++){box(g,4.6,.3,1,DARK,-117.6,.15,2.6+i*1.15);for(let j=0;j<3;j++){const c=add(g,new THREE.CylinderGeometry(.28,.28,1.3,12),M([0xe2cf9f,0x6b5a48,0xd8c08a][(i+j)%3],{roughness:.9,metalness:0}),-119.2+j*1.5,.45,2.6+i*1.15,false);c.rotation.z=Math.PI/2;}}
+ // образец-разрез
+ const sp=new THREE.Group();sp.position.set(-112,4.2,3);g.add(sp);let sy=2.4;
+ [[.5,0x3b2f22],[1.4,0x6b5a48],[2.2,0xe2cf9f],[.9,0x41505a]].forEach(([h,c])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(6,h,4),M(c,{roughness:.9,metalness:0}));m.position.y=sy-h/2;sy-=h;sp.add(m);E(m,g);});
+ const spP=pts(260,.13);{const a=spP.geometry.attributes.position.array,cc=spP.geometry.attributes.color.array;for(let i=0;i<260;i++){setP(a,i,(hash(i)-.5)*5.8,(hash(i+9)-.5)*2+ .4-1.3+ .2,(hash(i+3)-.5)*3.8);setC(cc,i,COL.qz);}spP.position.copy(sp.position);}
+ ups.push(t=>{sp.rotation.y=t*.25;spP.rotation.y=t*.25;sp.position.y=4.2+Math.sin(t*.8)*.25;spP.position.y=sp.position.y;});
+ // сетка скважин
+ for(let i=0;i<4;i++)for(let j=0;j<3;j++){const x=-131+i*6,z=-7+j*6.5;if(Math.abs(x+124)<3&&Math.abs(z+2)<3)continue;cyl(g,.06,.06,1.6,STEEL,x,.8,z,6,false);cyl(g,.18,.18,.18,CORM,x,1.65,z,10,false);}
+}
+
+/* ================= 1 · КАРЬЕР + самосвалы ================= */
+const HOP=[-70,2.1,4.2];
+{const g=G[1];
+ // экскаватор
+ const ex=new THREE.Group();ex.position.set(-95,H(-95,-1.5),-1.5);g.add(ex);
+ [[-.85],[.85]].forEach(([z])=>{const t=new THREE.Mesh(new THREE.BoxGeometry(3.4,.7,.7),DARK);t.position.set(0,.35,z);ex.add(t);E(t,g);});
+ const up=new THREE.Group();up.position.y=.8;ex.add(up);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(2.6,1.1,2),YEL);body.position.set(-.4,.6,0);up.add(body);E(body,g);
+ const cab=new THREE.Mesh(new THREE.BoxGeometry(1,1,.9),M(0x9fd9ea,{transparent:true,opacity:.55}));cab.position.set(.4,1.6,.5);up.add(cab);E(cab,g);
+ const bp=new THREE.Group();bp.position.set(.7,1.2,-.3);up.add(bp);
+ const boom=new THREE.Mesh(new THREE.BoxGeometry(3.6,.38,.4),YEL);boom.position.x=1.8;bp.add(boom);E(boom,g);
+ const ap=new THREE.Group();ap.position.x=3.6;bp.add(ap);
+ const arm=new THREE.Mesh(new THREE.BoxGeometry(2.6,.3,.34),YEL);arm.position.x=1.3;ap.add(arm);E(arm,g);
+ const bk=new THREE.Group();bk.position.x=2.6;ap.add(bk);const bucket=new THREE.Mesh(new THREE.BoxGeometry(.8,.7,.9),DARK);bucket.position.set(.3,-.2,0);bk.add(bucket);E(bucket,g);
+ const bl=new THREE.Mesh(new THREE.BoxGeometry(.6,.3,.7),WETM);bl.position.set(.3,.1,0);bk.add(bl);
+ ups.push(t=>{const u=(t%8)/8;let rot,b,a;
+  if(u<.25){rot=2.4;const k=sm(u/.25);b=lerp(.15,-.35,k);a=lerp(-1.1,-.4,k);}
+  else if(u<.5){const k=sm((u-.25)/.25);rot=lerp(2.4,-.59+2*Math.PI*0,k);b=lerp(-.35,.45,k);a=-.4-k*.5;}
+  else if(u<.62){rot=-.59;b=.45;a=lerp(-.9,-1.5,sm((u-.5)/.12));}
+  else{const k=sm((u-.62)/.38);rot=lerp(-.59,2.4,k);b=lerp(.45,.15,k);a=lerp(-1.5,-1.1,k);}
+  up.rotation.y=rot;bp.rotation.z=b;ap.rotation.z=a;bk.rotation.z=u>.5&&u<.62?-1.2:-.2;bl.visible=u>.15&&u<.55;});
+ // отвал вскрыши
+ const dump=add(g,new THREE.ConeGeometry(6,3.4,7),M(0x4f4234,{roughness:1,metalness:0,flatShading:true}),-104,1.5,-15);dump.scale.z=.7;
+}
+/* самосвалы */
+const trucks=[];
+{const g=G[1];
+ const TL=[[-91,.6],[-91,2.6],[-91,5.4],[-79,5.4],[-73,5.4],[-67.4,5.4],[-64.2,6.2],[-66.5,7.05],[-79,7.05],[-93.6,7.05],[-93.6,.6]];
+ const tp=mkPath(TL.map(([x,z])=>[x,0,z]).concat([[TL[0][0],0,TL[0][1]]]));
+ const dLoad=tp.L[1],dDump=tp.L[5];
+ function mkTruck(){const tg=new THREE.Group();tg.rotation.order='YZX';g.add(tg);
+  const ch=new THREE.Mesh(new THREE.BoxGeometry(4.2,.45,1.8),DARK);ch.position.y=.85;tg.add(ch);
+  const cb=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.2,1.7),YEL);cb.position.set(1.55,1.65,0);tg.add(cb);E(cb,g);
+  const pv=new THREE.Group();pv.position.set(-2.05,1.15,0);tg.add(pv);
+  const bed=new THREE.Mesh(new THREE.BoxGeometry(3,1.05,1.9),YEL);bed.position.set(1.5,.55,0);pv.add(bed);E(bed,g);
+  const ld=new THREE.Mesh(new THREE.BoxGeometry(2.7,.35,1.6),WETM);ld.position.set(1.5,1.15,0);pv.add(ld);
+  [[1.4,.95],[1.4,-.95],[-1.2,.95],[-1.2,-.95]].forEach(([x,z])=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.4,14),DARK);w.rotation.x=Math.PI/2;w.position.set(x,.5,z);tg.add(w);});
+  return{tg,pv,ld};}
+ for(let k=0;k<3;k++){const tr=mkTruck();tr.d=(k*tp.T/3+dDump+2)%tp.T;tr.wait=0;tr.loaded=k===1;tr.state='';trucks.push(tr);}
+ const pour=pts(90,.24);
+ ups.push((t,dt)=>{let dumping=null;
+  trucks.forEach((tr,k)=>{
+   if(tr.wait>0){tr.wait-=dt;if(tr.wait<=0){if(tr.state==='load')tr.loaded=true;if(tr.state==='dump')tr.loaded=false;tr.state='';}}
+   else{const ahead=trucks.reduce((m,o)=>{if(o===tr)return m;let dd=(o.d-tr.d+tp.T)%tp.T;return Math.min(m,dd);},1e9);
+    if(ahead>7.5){const nd=tr.d+dt*5.2;
+     if(tr.d<dLoad&&nd>=dLoad&&!tr.loaded){tr.d=dLoad;tr.wait=4;tr.state='load';}
+     else if(tr.d<dDump&&nd>=dDump&&tr.loaded){tr.d=dDump;tr.wait=3.2;tr.state='dump';}
+     else tr.d=nd%tp.T;}}
+   at(tp,tr.d,V);at(tp,(tr.d+1.6)%tp.T,V2);const yb=H(V.x,V.z),yf=H(V2.x,V2.z);
+   tr.tg.position.set(V.x,yb,V.z);const yaw=Math.atan2(-(V2.z-V.z),V2.x-V.x);let dy=yaw-tr.tg.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));tr.tg.rotation.y+=dy*Math.min(1,dt*6);
+   tr.tg.rotation.z=Math.atan2(yf-yb,1.6)*.9;tr.tg.position.y=(yb+yf)/2;
+   const tilt=tr.state==='dump'?Math.sin(clamp((3.2-tr.wait)/3.2,0,1)*Math.PI)*.75:0;tr.pv.rotation.z=-tilt;tr.ld.visible=tr.loaded||tr.state==='load'&&tr.wait<2;
+   if(tr.state==='dump'&&tilt>.35)dumping=tr;});
+  const a=pour.geometry.attributes.position.array,cc=pour.geometry.attributes.color.array;pour.visible=!!dumping;
+  if(dumping){for(let i=0;i<90;i++){const u=((t*1.4+i/90)%1);setP(a,i,lerp(-69.4,HOP[0],u)+(hash(i)-.5)*.9,lerp(2.6,HOP[1]+.3,u)-u*u*.6,lerp(5.4,HOP[2],u)+(hash(i+5)-.5)*.9);setC(cc,i,COL.wet);}pour.geometry.attributes.position.needsUpdate=true;pour.geometry.attributes.color.needsUpdate=true;}
+ });
+}
+
+/* ================= 2 · ПРИЁМКА ================= */
+{const g=G[2];
+ const hp=add(g,new THREE.CylinderGeometry(2.7,.7,2.4,4,1,true),M(0x3a5566,{side:THREE.DoubleSide,metalness:.5}),HOP[0],HOP[1],HOP[2]);hp.rotation.y=Math.PI/4;
+ for(let i=-3;i<=3;i++)box(g,.06,.06,3.6,STEEL,HOP[0]+i*.5,HOP[1]+1.22,HOP[2],false);
+ [[-1.2,-1.2],[1.2,-1.2],[-1.2,1.2],[1.2,1.2]].forEach(([dx,dz])=>box(g,.18,1.5,.18,STEEL,HOP[0]+dx,.75,HOP[2]+dz,false));
+ const scr=box(g,3,.22,2,STEEL,-66.6,2.5,3.6);scr.rotation.z=-.22;
+ ups.push(t=>{scr.position.y=2.5+Math.sin(t*38)*.04;scr.position.x=-66.6+Math.cos(t*38)*.03;});
+ box(g,3.2,1.6,2.2,MET,-66.6,.8,3.6);
+ const rej=add(g,new THREE.ConeGeometry(1.4,1.2,8),M(0x5b5148,{flatShading:true,roughness:1}),-64.6,.6,6.4);
+ conveyor(g,[-64.8,2.3,3.4],[-58.2,5.7,2],.8);
+}
+
+/* ================= 3 · ПРОМЫВКА ================= */
+const SCR=[-56,-52,-48];
+{const g=G[3];
+ box(g,13.4,1.6,4.2,CONC,-52,.8,2);
+ const imps=[];
+ SCR.forEach((x,k)=>{box(g,3,3.6,3,GLASS,x,3.4,2);box(g,1,.8,1,MET,x,5.6,2);cyl(g,.08,.08,3.4,STEEL,x,3.6,2,6,false);
+  const ig=new THREE.Group();ig.position.set(x,0,2);g.add(ig);[2.6,4.0].forEach((y,j)=>{for(let b=0;b<2;b++){const bl=new THREE.Mesh(new THREE.BoxGeometry(2.2,.1,.4),STEEL);bl.position.y=y;bl.rotation.y=b*Math.PI/2+(j?Math.PI/4:0);bl.rotation.x=j?-.35:.35;ig.add(bl);}});imps.push(ig);});
+ box(g,12.6,.3,.7,MET,-51.4,5.5,2,true);
+ const sw=pts(3*170,.22);const sa=sw.geometry.attributes.position.array,sc=sw.geometry.attributes.color.array;
+ for(let i=0;i<510;i++)setC(sc,i,hash(i*3)<.75?(hash(i)<.5?COL.wet:COL.wet2):COL.water);
+ ups.push(t=>{imps.forEach((ig,k)=>ig.rotation.y=t*(k%2?-4:4));
+  for(let i=0;i<510;i++){const k=i%3,r=.25+hash(i)*1.05,a=hash(i+7)*6.28+t*(k%2?-2.6:2.6)*(1.3-r*.5),h=2.0+((hash(i+11)+t*.12*(hash(i+2)>.5?1:-1))%1+1)%1*2.9;
+   setP(sa,i,SCR[k]+Math.cos(a)*r,h,2+Math.sin(a)*r);}sw.geometry.attributes.position.needsUpdate=true;});
+ cyl(g,.6,.6,1,MET,-45,1.2,2,14);
+}
+
+/* ================= 4 · ГИДРОЦИКЛОНЫ, СГУСТИТЕЛЬ ================= */
+const CYC=[[-38.9,1.4],[-37.1,1.4],[-38,3]];
+{const g=G[4];
+ box(g,5,.25,4.2,MET,-38,6.1,2);[[-40.3,.2],[-35.7,.2],[-40.3,3.8],[-35.7,3.8]].forEach(([x,z])=>box(g,.2,6,.2,STEEL,x,3,z,false));
+ CYC.forEach(([x,z])=>{cyl(g,.68,.68,1.3,STEEL,x,9.25,z,20);cyl(g,.68,.16,2.8,STEEL,x,7.2,z,20);cyl(g,.2,.2,.9,MET,x,10.3,z,10,false);});
+ box(g,4.2,.4,.6,MET,-38,10.75,2.2);
+ // спирали
+ const cs=pts(3*130,.18);const ca=cs.geometry.attributes.position.array,cc=cs.geometry.attributes.color.array;
+ for(let i=0;i<390;i++)setC(cc,i,i%130<85?(hash(i)<.5?COL.wet:COL.qz.clone().lerp(COL.wet,.5)):COL.water2);
+ ups.push(t=>{for(let i=0;i<390;i++){const k=Math.floor(i/130),j=i%130,[x,z]=CYC[k];let y,r,a;
+   if(j<85){const u=((t*.45+j/85)%1);y=9.8-u*4.2;r=y>8.6?.6:lerp(.13,.6,clamp((y-5.8)/2.8,0,1));a=u*30+j;}
+   else{const u=((t*.6+(j-85)/45)%1);y=6.4+u*4.6;r=.14;a=-u*24+j;}
+   setP(ca,i,x+Math.cos(a)*r,y,z+Math.sin(a)*r);}cs.geometry.attributes.position.needsUpdate=true;});
+ // сгуститель
+ const TH=[-40,0,-12];
+ cyl(g,5,5,1.7,CONC,TH[0],.85,TH[2],48,true,true).material=M(0x34495a,{side:THREE.DoubleSide,roughness:.9});
+ const ws=add(g,new THREE.CircleGeometry(4.9,48),WATER,TH[0],1.45,TH[2],false);ws.rotation.x=-Math.PI/2;
+ cyl(g,.45,.45,3,STEEL,TH[0],1.5,TH[2],12);
+ const rk=new THREE.Group();rk.position.set(TH[0],2.2,TH[2]);g.add(rk);const br=new THREE.Mesh(new THREE.BoxGeometry(5,.3,.8),MET);br.position.x=2.5;rk.add(br);E(br,g);
+ ups.push(t=>rk.rotation.y=t*.25);
+ // шламохранилище
+ const pond=add(g,new THREE.CircleGeometry(6.4,40),M(0x4a3524,{roughness:.3,metalness:.1,transparent:true,opacity:.92}),-46,-.45,-22,false);pond.rotation.x=-Math.PI/2;pond.scale.y=.7;
+ const OVF=[[-38,10.8,2.2],[-38,11.6,2.2],[-40,11.6,-3],[-40,2.6,-9],[-40,2.4,-11.8]], RET=[[-37,1.3,-8],[-46,1.3,-5],[-52,1.3,-1],[-52,6.3,-1],[-52,6.3,1.4]], SLM=[[-43.5,.9,-14.5],[-46,.3,-19.5]];
+ pipe(g,OVF,.22);pipe(g,RET,.22);pipe(g,SLM,.22,M(0x5a4030,{transparent:true,opacity:.5,depthWrite:false}));
+ flow(mkPath(OVF),70,5,.24,(d,i)=>i%4?COL.water:COL.slime,.12);
+ flow(mkPath(RET),80,5,.24,()=>COL.water,.12);
+ flow(mkPath(SLM),24,2.5,.28,()=>COL.slime,.1);
+}
+
+/* ================= 5 · ОБЕЗВОЖИВАНИЕ, СКЛАД ================= */
+{const g=G[5];
+ cyl(g,1.2,1.2,3,GLASS,-33,1.5,-2,20);cyl(g,1.2,.3,1,STEEL,-33,3.5,-2,20);
+ const dws=box(g,4.2,.26,2.2,STEEL,-32.4,3.7,2);dws.rotation.z=-.18;box(g,4,2.8,2,MET,-32.4,1.4,2);
+ ups.push(t=>{dws.position.y=3.7+Math.sin(t*40)*.035;});
+ conveyor(g,[-29.4,3.4,2],[-23.6,7.7,2],.8);
+ const pile=new THREE.ConeGeometry(4.6,5.2,40,6);{const p=pile.attributes.position;for(let i=0;i<p.count;i++){const y=p.getY(i);if(y<2.5&&y>-2.5){const s=1+(hash(i)-.5)*.08;p.setX(i,p.getX(i)*s);p.setZ(i,p.getZ(i)*s);}}pile.computeVertexNormals();}
+ add(g,pile,M(0x8c6a44,{roughness:1,metalness:0,flatShading:true}),-22,2.6,2,false);
+ conveyor(g,[-17.6,1.1,1.2],[-13.4,3.7,0],.8);
+ const drip=pts(60,.14);const da=drip.geometry.attributes.position.array,dc=drip.geometry.attributes.color.array;for(let i=0;i<60;i++)setC(dc,i,COL.water2);
+ ups.push(t=>{for(let i=0;i<60;i++){const u=(t*1.5+hash(i))%1;setP(da,i,-34.2+hash(i+1)*3.6,3.4-u*1.2,1.2+hash(i+2)*1.6);}drip.geometry.attributes.position.needsUpdate=true;});
+}
+
+/* ================= 6 · СУШКА ================= */
+{const g=G[6];
+ const dg=new THREE.Group();dg.position.set(-6,3,0);dg.rotation.z=-.05;g.add(dg);
+ const rot=new THREE.Group();dg.add(rot);
+ const drum=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,12,30,1,true),M(0x5d7a8a,{transparent:true,opacity:.38,depthWrite:false,side:THREE.DoubleSide,metalness:.6}));drum.rotation.z=Math.PI/2;rot.add(drum);E(drum,g);
+ for(let i=0;i<8;i++){const a=i/8*Math.PI*2;const f=new THREE.Mesh(new THREE.BoxGeometry(11.6,.05,.32),STEEL);f.position.set(0,Math.cos(a)*1.22,Math.sin(a)*1.22);f.rotation.x=-a;rot.add(f);}
+ [-3.6,3.6].forEach(x=>{const r=new THREE.Mesh(new THREE.TorusGeometry(1.55,.13,8,40),STEEL);r.rotation.y=Math.PI/2;r.position.x=x;rot.add(r);});
+ const gear=new THREE.Mesh(new THREE.TorusGeometry(1.6,.12,6,40),CORM);gear.rotation.y=Math.PI/2;gear.position.x=0;rot.add(gear);
+ ups.push(t=>rot.rotation.x=t*.9);
+ [-9.6,-2.4].forEach(x=>box(g,1.4,1.4,2.4,MET,x,.7,0));
+ box(g,1.6,1.8,1.9,MET,-13.2,3.3,0);const nz=cyl(g,.4,.7,1,CORM,-12.4,3.3,0,14);nz.rotation.z=Math.PI/2;
+ box(g,1.8,3.4,2.6,MET,1.1,2.4,0);
+ pipe(g,[[1.1,4.2,0],[1.1,7,0],[3,7,-5],[3,7,-6.4]],.42,M(0x3d5a6a,{metalness:.5}));
+ box(g,3.2,4,3,STEEL,3,5,-8);for(let i=0;i<3;i++)cyl(g,.45,.15,1,MET,2+i,2.5,-8,8,false);
+ [[1.6,-6.7],[4.4,-6.7],[1.6,-9.3],[4.4,-9.3]].forEach(([x,z])=>box(g,.18,3,.18,STEEL,x,1.5,z,false));
+ cyl(g,.42,.5,12,STEEL,6.4,6,-8,16);
+ const fl=pts(160,.42,{add:true});const fa=fl.geometry.attributes.position.array,fc=fl.geometry.attributes.color.array;
+ const plume=pts(110,.9,{op:.55});const pa=plume.geometry.attributes.position.array,pc=plume.geometry.attributes.color.array;
+ const light=new THREE.PointLight(0xff8a3a,1.6,14);light.position.set(-11,3.3,0);g.add(light);
+ const tmpc=new THREE.Color();
+ ups.push(t=>{for(let i=0;i<160;i++){const u=(t*1.3+hash(i))%1;const r=u*1.0*hash(i+4),a=hash(i+8)*6.28+t*3;
+   setP(fa,i,-12+u*5.2,3.3-u*.25+Math.sin(a)*r,Math.cos(a)*r);tmpc.copy(COL.flame).lerp(COL.flame2,u).multiplyScalar(1-u*.7);setC(fc,i,tmpc);}
+  fl.geometry.attributes.position.needsUpdate=true;fl.geometry.attributes.color.needsUpdate=true;
+  for(let i=0;i<110;i++){const u=(t*.12+hash(i))%1;setP(pa,i,6.4+u*u*6+(hash(i+1)-.5)*u*3,12.3+u*9,-8+(hash(i+2)-.5)*u*3);tmpc.copy(COL.smoke).lerp(COL.bg,sm(u));setC(pc,i,tmpc);}
+  plume.geometry.attributes.position.needsUpdate=true;plume.geometry.attributes.color.needsUpdate=true;
+  light.intensity=1.4+Math.sin(t*17)*.25+Math.sin(t*7.3)*.2;});
+ conveyor(g,[2.6,1.4,0],[7.4,1.4,0],.7);
+}
+
+/* ================= 7 · РАССЕВ ================= */
+const DECK=[13.6,11.6,9.6,7.6], SX=[26,32,38];
+{const g=G[7];
+ box(g,1.1,16.6,1.3,GLASS,8,8.3,0);box(g,1.6,1.2,1.6,MET,8,17,0);beam(g,[8.6,16.7,0],[13.6,16.3,0],.6,.5,MET);
+ const bkts=[];for(let i=0;i<14;i++){const b=box(g,.7,.3,.4,STEEL,8,0,.2,false);bkts.push(b);}
+ ups.push(t=>bkts.forEach((b,i)=>{const u=((t*.35+i/14)%1);if(u<.5){b.position.set(8,1+u*2*15.4,.25);}else{b.position.set(8,16.4-(u-.5)*2*15.4,-.25);}}));
+ [[13.6,-2.4],[18.4,-2.4],[13.6,2.4],[18.4,2.4]].forEach(([x,z])=>box(g,.32,16.4,.32,STEEL,x,8.2,z,false));
+ box(g,5,15,5,GLASS,16,8.4,0);box(g,5.6,.4,5.6,MET,16,16.1,0);[6.4,12.4].forEach(y=>box(g,5,.15,5,CONC,16,y-.2,0,false));
+ const decks=[];DECK.forEach((y,k)=>{const dg=new THREE.Group();dg.position.set(16,y,0);dg.rotation.z=-.12;g.add(dg);
+  const fr=new THREE.Mesh(new THREE.BoxGeometry(4.4,.12,4.2),M([0x6d7a80,0xefe2c4,0xe0b46a,0xc98b5a][k],{transparent:true,opacity:.28,depthWrite:false}));dg.add(fr);E(fr,g);
+  const mesh=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.PlaneGeometry(4.2,4,12,12)),g.userData.lm);mesh.rotation.x=-Math.PI/2;mesh.position.y=.07;dg.add(mesh);decks.push(dg);});
+ ups.push(t=>decks.forEach((d,k)=>{d.position.y=DECK[k]+Math.sin(t*36+k)*.04;}));
+ // падение и сортировка внутри башни
+ const n=420,fp=pts(n,.2);const fa=fp.geometry.attributes.position.array,fc=fp.geometry.attributes.color.array;const cls=[];
+ for(let i=0;i<n;i++){const h=hash(i*1.7);const c=h<.06?0:h<.58?1:h<.82?2:h<.95?3:4;cls.push(c);setC(fc,i,c===0||c===4?COL.rej:FR[c-1]);}
+ ups.push(t=>{for(let i=0;i<n;i++){const c=cls[i],stopY=c<4?DECK[c]+.18:6.4,u=(t*.32+hash(i+3))%1;const fall=15.6-stopY,x0=14.2+hash(i+5)*3.2,z0=(hash(i+6)-.5)*3.6;
+   const k=u<.62?u/.62:1;let x=x0,y=15.6-fall*k*k,z=z0;if(u>=.62){const s=(u-.62)/.38;x=lerp(x0,18.6,s);y=stopY-(x-16)*.12;}
+   setP(fa,i,x,y,z);}fp.geometry.attributes.position.needsUpdate=true;});
+ // галерея над силосами
+ box(g,21,1.7,3.2,GLASS,29.5,15.9,0);
+ const rejP=add(g,new THREE.ConeGeometry(1.8,1.6,9),M(0x5e666a,{flatShading:true,roughness:1}),20.6,.8,-5.2,false);
+ pipe(g,[[18.6,13.4,-1.4],[19.6,11,-3.4],[20.4,2,-5]],.2,M(0x667480,{transparent:true,opacity:.45,depthWrite:false}));
+ SX.forEach((x,k)=>pipe(g,[[18.6,DECK[k+1]-.2,[-1,0,1][k]],[20.4,15.5,[-1,0,1][k]]],.18));
+}
+
+/* ================= ГЛАВНЫЙ ПОТОК ПЕСКА ================= */
+{const MAIN=[[HOP[0],1.1,HOP[2]],[-67.8,2.75,3.6],[-65,2.2,3.4],[-58.2,5.75,2],[-57.4,5.75,2],[-45.8,5.75,2],[-45,5.75,2],[-44.6,10.6,2],[-38.4,10.6,2],[-38,10.2,2],[-38,5.9,2],[-34.6,4.1,2],[-30.4,3.3,2],[-29.4,3.4,2],[-23.6,7.8,2],[-22.6,6.6,2],[-22,4.6,2],[-21,1.4,2],[-17.6,1.2,1.2],[-13.4,3.8,0],[-12.2,2.6,0],[0,2,0],[1.2,1.6,0],[2.6,1.55,0],[7.4,1.55,0],[8,1.6,0],[8,16.7,0],[13.6,16.4,0],[16,15.9,0]];
+ const pa=mkPath(MAIN);let dD0=0,dD1=0;{for(let i=0;i<MAIN.length;i++){if(MAIN[i][0]===-12.2)dD0=pa.L[i];if(MAIN[i][0]===0)dD1=pa.L[i];}}
+ const tc=new THREE.Color();
+ flow(pa,900,3.2,.26,(d,i)=>{if(d<dD0)return hash(i)<.5?COL.wet:COL.wet2;if(d<dD1){return tc.copy(COL.wet).lerp(COL.qz,(d-dD0)/(dD1-dD0));}return COL.qz;},.32,
+  (d,i,v,t)=>{if(d>dD0&&d<dD1){const a=hash(i)*6.28+t*.9;const r=.4+hash(i+2)*.7;const lift=hash(i+3)<.35?Math.max(0,Math.sin(a*1.0)):0;v.y+=.2+-Math.abs(Math.cos(a*.5))*r*.4+lift*1.4;v.z+=Math.sin(a)*r*.6;}});
+ // ветки на силосы
+ SX.forEach((x,k)=>{const z=[-1,0,1][k];flow(mkPath([[18.6,DECK[k+1]-.2,z],[20.4,15.6,z],[x,15.6,z],[x,14.6,0],[x,9,0]]),150,3,.24,()=>FR[k],.25);});
+ flow(mkPath([[18.6,13.4,-1.4],[19.6,11,-3.4],[20.4,2,-5]]),40,3,.22,()=>COL.rej,.12);
+}
+
+/* ================= 8 · ЛАБОРАТОРИЯ ================= */
+{const g=G[8];const L=[26,0,-14];
+ box(g,11,.3,7,CONC,L[0],.15,L[2]);box(g,11,4,7,GLASS,L[0],2.3,L[2]);box(g,11.4,.3,7.4,MET,L[0],4.45,L[2]);
+ box(g,9,.14,1.8,WHITE,L[0],1.6,-14.8);[[-4.2,-.7],[4.2,-.7],[-4.2,.7],[4.2,.7]].forEach(([x,z])=>box(g,.1,1.5,.1,STEEL,L[0]+x,.8,-14.8+z,false));
+ const sv=new THREE.Group();sv.position.set(22.6,1.7,-14.8);g.add(sv);for(let i=0;i<6;i++){const s=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.26,20),i===5?MET:STEEL);s.position.y=.13+i*.28;sv.add(s);E(s,g);}
+ box(g,1.2,.25,1.2,DARK,22.6,1.8,-14.8);
+ const pg=new THREE.Group();pg.position.set(25.4,1.7,-14.8);g.add(pg);
+ [[-.55],[.55]].forEach(([x])=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,2.2,8),STEEL);c.position.set(x,1.1,0);pg.add(c);});
+ const top=new THREE.Mesh(new THREE.BoxGeometry(1.5,.3,.6),MET);top.position.y=2.25;pg.add(top);E(top,g);
+ const base=new THREE.Mesh(new THREE.BoxGeometry(1.5,.25,.7),MET);base.position.y=.12;pg.add(base);E(base,g);
+ const cell=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.4,16),CORM);cell.position.y=.45;pg.add(cell);E(cell,g);
+ const pis=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,1.2,12),STEEL);pg.add(pis);
+ const tb=box(g,.6,.5,.5,WHITE,28,1.92,-14.8);const vial=cyl(g,.08,.08,.35,M(0x7fe3ff,{emissive:0x2aa8cc,transparent:true,opacity:.8}),28,2.3,-14.8,10,false);
+ box(g,.5,.12,.5,DARK,30,1.74,-14.8,false);cyl(g,.05,.05,.8,STEEL,30,2.1,-14.9,6,false);const tube=cyl(g,.09,.09,.6,MET,30,2.4,-14.75,10,false);tube.rotation.x=.5;
+ // гигантское зерно
+ const gg=new THREE.IcosahedronGeometry(2.2,4);{const p=gg.attributes.position;for(let i=0;i<p.count;i++){V.fromBufferAttribute(p,i);const n=V.clone().normalize();const k=1+.07*Math.sin(n.x*4.1+1)*Math.cos(n.y*3.3)+.05*Math.sin(n.z*5.7+n.x*2)+.03*Math.sin(n.y*9+n.z*7);V.copy(n).multiplyScalar(2.2*k);V.x*=1.08;V.y*=.9;p.setXYZ(i,V.x,V.y,V.z);}gg.computeVertexNormals();}
+ const grain=new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:0xefe2c4,roughness:.32,metalness:.05,transparent:true,opacity:.94,emissive:0x2a2214}));grain.position.set(26,8.2,-14);scene.add(grain);
+ const ideal=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.55,2)),new THREE.LineBasicMaterial({color:CY,transparent:true,opacity:.14,depthWrite:false}));ideal.position.copy(grain.position);scene.add(ideal);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(2.95,.03,6,90),new THREE.MeshBasicMaterial({color:CY}));ring.position.copy(grain.position);scene.add(ring);
+ const scan=new THREE.Mesh(new THREE.TorusGeometry(2.6,.02,4,80),new THREE.MeshBasicMaterial({color:0xff6b57}));scan.rotation.x=Math.PI/2;scan.position.copy(grain.position);scene.add(scan);
+ ups.push(t=>{sv.position.x=22.6+Math.sin(t*16)*.05;sv.rotation.y=Math.sin(t*8)*.3;sv.position.y=1.7+Math.abs(Math.sin(t*5))*.04;
+  const u=(t%5)/5;const down=u<.55?sm(u/.55):1-sm((u-.55)/.45);pis.position.y=2.0-down*.85;cell.scale.y=1-down*.12;
+  vial.material.emissiveIntensity=.6+Math.sin(t*3)*.3;
+  grain.rotation.y=t*.35;grain.rotation.x=Math.sin(t*.3)*.3;ideal.rotation.y=-t*.1;ring.rotation.x=Math.PI/2+Math.sin(t*.4)*.3;ring.rotation.y=t*.2;
+  scan.position.y=8.2+Math.sin(t*1.2)*2.1;const sr=Math.sqrt(Math.max(0,1-Math.pow((scan.position.y-8.2)/2.2,2)))*1.06+.05;scan.scale.set(sr,sr,1);});
+}
+
+/* ================= 9 · СИЛОСЫ, Ж/Д ================= */
+const train={x:44};
+{const g=G[9];
+ SX.forEach((x,k)=>{cyl(g,2.2,2.2,8.5,M(0xb9c7cf,{metalness:.45,roughness:.4}),x,9.75,0,28);cyl(g,2.2,.45,2,STEEL,x,4.5,0,28);cyl(g,2.25,2.25,.6,M([0xefe2c4,0xe0b46a,0xc98b5a][k],{roughness:.6}),x,11.5,0,28,false);
+  add(g,new THREE.ConeGeometry(2.3,.8,28),STEEL,x,14.4,0);[[-1.6,-1.6],[1.6,-1.6],[-1.6,1.6],[1.6,1.6]].forEach(([dx,dz])=>box(g,.22,5.6,.22,STEEL,x+dx,2.8,dz,false));});
+ // рельсы
+ [-.72,.72].forEach(z=>box(g,66,.14,.12,STEEL,55,.2,z,false));
+ const sl=new THREE.InstancedMesh(new THREE.BoxGeometry(.26,.12,2.1),DARK,66);const mm=new THREE.Matrix4();for(let i=0;i<66;i++){mm.makeTranslation(22.5+i,.08,0);sl.setMatrixAt(i,mm);}g.add(sl);
+ // состав
+ const tg=new THREE.Group();g.add(tg);const loads=[];
+ const loco=new THREE.Mesh(new THREE.BoxGeometry(5,2.3,2.3),TEAL);loco.position.set(-2.5,1.6,0);tg.add(loco);E(loco,g);
+ const lc=new THREE.Mesh(new THREE.BoxGeometry(1.4,.8,2.1),M(0x9fd9ea,{transparent:true,opacity:.6}));lc.position.set(-1.2,3.1,0);tg.add(lc);
+ for(let c=0;c<4;c++){const cx=-5.6-2.35-c*4.7;const cb=new THREE.Mesh(new THREE.BoxGeometry(4.3,1.5,2.4),M(0x7f939e,{metalness:.5}));cb.position.set(cx,2.15,0);tg.add(cb);E(cb,g);
+  const hb=new THREE.Mesh(new THREE.CylinderGeometry(1.6,.5,1,4,1),M(0x6a7e89,{metalness:.5}));hb.rotation.y=Math.PI/4;hb.scale.set(1.3,1,.8);hb.position.set(cx,1,0);tg.add(hb);
+  const ld=new THREE.Mesh(new THREE.BoxGeometry(4,.35,2.1),QZM);ld.position.set(cx,2.95,0);tg.add(ld);loads.push(ld);}
+ const fall=pts(120,.24);const fa=fall.geometry.attributes.position.array,fc=fall.geometry.attributes.color.array;for(let i=0;i<120;i++)setC(fc,i,FR[i%3]);
+ const pneu=[[78,3.4,0],[82,6,-3],[86,7,-6],[88.5,6.6,-7]];pipe(g,pneu,.2,M(0x667480,{transparent:true,opacity:.4,depthWrite:false}));
+ const pn=flow(mkPath(pneu),60,6,.24,(d,i)=>FR[i%3],.08);
+ const CYCL=36;
+ ups.push(t=>{const u=t%CYCL;let x,loaded,ldg=false,unl=false;
+  if(u<6){x=44;loaded=u>1.5;ldg=true;}else if(u<18){x=lerp(44,86,ease((u-6)/12));loaded=true;}else if(u<24){x=86;loaded=u<22;unl=true;}else{x=lerp(86,44,ease((u-24)/12));loaded=false;}
+  tg.position.x=x;loads.forEach((l,k)=>{l.visible=ldg?u>1.5+k*.8:loaded;});
+  fall.visible=ldg;if(ldg){for(let i=0;i<120;i++){const k=i%3,uu=(t*1.8+hash(i))%1;setP(fa,i,SX[k]+(hash(i+2)-.5)*.5,3.5-uu*1.1,(hash(i+4)-.5)*.5);}fall.geometry.attributes.position.needsUpdate=true;}
+  pn.on=unl;train.x=x;});
+ // водяные ёмкости у куста
+ for(let i=0;i<4;i++)box(g,5,2.6,2.2,M(0x3b5f73,{metalness:.4}),82+i*0,1.3,8+i*2.6);
+}
+
+/* ================= 10 · ФЛОТ ГРП ================= */
+const FRAC_T=20;
+function fracPhase(u){if(u<3)return['Подушка: чистая жидкость раскрывает трещину',0];if(u<6.5)return['Мелкая фракция 100 mesh',Math.round(lerp(60,180,(u-3)/3.5))];if(u<12)return['Основная фракция 20/40',Math.round(lerp(240,600,(u-6.5)/5.5))];if(u<13.5)return['Продавка: песок уходит из ствола в пласт',0];if(u<15)return['Сброс давления: трещина смыкается на песок',0];return['Приток: нефть и газ идут по пачке проппанта',0];}
+const pumps=[];
+{const g=G[10];
+ [87.6,90.6,93.6].forEach((x,k)=>{box(g,2.4,6.4,2.4,M(0x51707f,{metalness:.4}),x,3.5,-7);cyl(g,1.2,.3,.9,STEEL,x,0,-7,4,false).position.y=.2;box(g,2.42,.4,2.42,M([0xefe2c4,0xe0b46a,0xc98b5a][k]),x,5.8,-7,false);});
+ beam(g,[86.4,.6,-5.6],[94.8,.6,-5.6],.9,.3,MET);beam(g,[94.8,.6,-5.6],[92.2,2.2,-3.2],.6,.25,MET);
+ // блендер
+ const bg=new THREE.Group();bg.position.set(91,0,-2.5);g.add(bg);
+ const bch=new THREE.Mesh(new THREE.BoxGeometry(7,.5,2.2),DARK);bch.position.y=.8;bg.add(bch);
+ const bcab=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.6,2.2),WHITE);bcab.position.set(2.8,1.8,0);bg.add(bcab);E(bcab,g);
+ const tub=new THREE.Mesh(new THREE.CylinderGeometry(1,.9,1.2,20),CORM);tub.position.set(0,1.7,0);bg.add(tub);E(tub,g);
+ const mix=new THREE.Mesh(new THREE.BoxGeometry(1.6,.1,.2),STEEL);mix.position.set(0,2.35,0);bg.add(mix);
+ // манифольд
+ box(g,12,.7,1,MET,101,.6,0);
+ const mkPump=(x,side)=>{const pg=new THREE.Group();pg.position.set(x,0,side*4.6);pg.rotation.y=side<0?Math.PI/2:-Math.PI/2;g.add(pg);
+  const ch=new THREE.Mesh(new THREE.BoxGeometry(6.4,.5,2.2),DARK);ch.position.y=.85;pg.add(ch);
+  const cab=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.7,2.2),WHITE);cab.position.set(2.5,1.9,0);pg.add(cab);E(cab,g);
+  const eng=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.9,2),CORM);eng.position.set(.4,2,0);pg.add(eng);E(eng,g);
+  const fe=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.2,2),MET);fe.position.set(-2,1.7,0);pg.add(fe);E(fe,g);
+  [[2.2,1],[2.2,-1],[-.6,1],[-.6,-1],[-2.2,1],[-2.2,-1]].forEach(([wx,wz])=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.36,12),DARK);w.rotation.x=Math.PI/2;w.position.set(wx,.48,wz);pg.add(w);});
+  beam(g,[x,1.2,side*1.9],[x,.7,side*.5],.2,.2,STEEL,false);pumps.push(pg);};
+ [96.6,99.4,102.2,105].forEach(x=>{mkPump(x,-1);mkPump(x,1);});
+ // устье
+ const W=[112,0,0];box(g,3,.3,3,CONC,W[0],.15,W[2]);
+ [[.6,1.2,1.0],[.45,.9,2.0],[.45,.9,2.9],[.35,.8,3.7]].forEach(([r,h,y])=>cyl(g,r,r,h,STEEL,W[0],y,W[2],16));
+ [1.5,2.5,3.3].forEach(y=>{const v=add(g,new THREE.TorusGeometry(.42,.07,6,16),CORM,W[0],y,W[2]+.75,false);});
+ box(g,1.6,.5,.9,MET,W[0],4.3,W[2]);
+ pipe(g,[[107,.6,0],[109.5,.6,0],[111.2,1.2,0]],.2,STEEL);
+ // фургон управления
+ box(g,5,2.4,2.4,WHITE,88,1.6,5);box(g,4,.5,.05,M(0x7fe3ff,{emissive:0x3fb0dc}),88,2,6.22,false);
+ const FP=mkPath([[91.6,2.2,-2.5],[95,.7,-.2],[107,.7,0],[109.5,.6,0],[112,1.6,0],[112,-3,0]]);
+ const fst=flow(FP,220,9,.24,(d,i,v,t)=>{const [,c]=fracPhase(t%FRAC_T);return hash(i)<c/650?FR[c>200?0:2]:COL.water;},.14);
+ const lp=new THREE.PointLight(0xff6b57,.0,18);lp.position.set(101,4,0);g.add(lp);
+ ups.push(t=>{const u=t%FRAC_T,on=u<13.5;fst.on=on;mix.rotation.y=on?t*8:0;pumps.forEach((p,i)=>{p.position.y=on?Math.sin(t*44+i)*.025:0;});lp.intensity=on?.8+Math.sin(t*9)*.2:0;});
+}
+
+/* ================= 11 · ПЛАСТ И ТРЕЩИНЫ ================= */
+{const g=G[11];
+ const LAY=[[0,-7,0x6b5a48],[-7,-16,0x4b5d6a],[-16,-26,0x5e6f63],[-26,-38,0x2f5266],[-38,-46,0x3b4650]];
+ LAY.forEach(([a,b,c],k)=>{const h=a-b;const m=box(g,74,h,30,M(c,{transparent:true,opacity:k===3?.14:.07,depthWrite:false,roughness:1,side:THREE.DoubleSide}),137,(a+b)/2-.05,0);m.renderOrder=-1;});
+ const pores=pts(700,.18,{op:.6});{const a=pores.geometry.attributes.position.array,c=pores.geometry.attributes.color.array;for(let i=0;i<700;i++){setP(a,i,101+hash(i)*72,-26.5-hash(i+1)*11,(hash(i+2)-.5)*29);setC(c,i,COL.oil.clone().multiplyScalar(.55));}}
+ const cp=new THREE.CurvePath();cp.add(new THREE.LineCurve3(new THREE.Vector3(112,0,0),new THREE.Vector3(112,-22,0)));
+ cp.add(new THREE.QuadraticBezierCurve3(new THREE.Vector3(112,-22,0),new THREE.Vector3(112,-32,0),new THREE.Vector3(122,-32,0)));cp.add(new THREE.LineCurve3(new THREE.Vector3(122,-32,0),new THREE.Vector3(164,-32,0)));
+ const well=new THREE.Mesh(new THREE.TubeGeometry(cp,160,.45,12,false),M(0x7fe3ff,{transparent:true,opacity:.28,depthWrite:false,emissive:0x0f4a5c}));g.add(well);
+ const wp=mkPath(cp.getSpacedPoints(120));
+ const FX=[126,136,146,156];const FRS=[],PROP=[];const NP=700;
+ FX.forEach((x,j)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(1,56),new THREE.MeshBasicMaterial({color:CY,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
+  m.position.set(x,-32,0);m.rotation.y=Math.PI/2;g.add(m);const rimG=new THREE.BufferGeometry().setFromPoints(Array.from({length:65},(_,i)=>{const a=i/64*Math.PI*2;return new THREE.Vector3(Math.cos(a),Math.sin(a),0);}));
+  const rimL=new THREE.Line(rimG,new THREE.LineBasicMaterial({color:CY,transparent:true,opacity:.8}));m.add(rimL);FRS.push(m);
+  const p=pts(NP,.2);const a=p.geometry.attributes.position.array,c=p.geometry.attributes.color.array;const arr=[];for(let i=0;i<NP;i++){const r=Math.sqrt(hash(i*3.1+j));const an=hash(i*7.7+j*3)*6.28;arr.push([r,an]);}arr.sort((A,B)=>A[0]-B[0]);
+  arr.forEach(([r,an],i)=>{setP(a,i,x+(hash(i+j)-.5)*.3,-32+Math.sin(an)*r*4.3,Math.cos(an)*r*9.2);setC(c,i,r>.82?COL.f3:COL.qz.clone().lerp(COL.f2,hash(i)*.4));});
+  p.geometry.setDrawRange(0,0);PROP.push(p);});
+ // нефть
+ const NO=360,oil=pts(NO,.26,{add:true});const oa=oil.geometry.attributes.position.array,oc=oil.geometry.attributes.color.array;const OS=[];
+ for(let i=0;i<NO;i++){const j=i%4,r=Math.sqrt(hash(i*1.3))*.95,an=hash(i*2.9)*6.28;OS.push([j,Math.sin(an)*r*4.3,Math.cos(an)*r*9.2,hash(i*5.1)]);setC(oc,i,COL.oil);}
+ const dEnt=FX.map(x=>{let best=0,bd=1e9;for(let i=0;i<wp.P.length;i++){const dd=Math.abs(wp.P[i].x-x)+Math.abs(wp.P[i].y+32);if(dd<bd){bd=dd;best=wp.L[i];}}return best;});
+ // стрелки давления смыкания
+ const arrows=[];[1,-1].forEach(s=>{const ag=new THREE.Group();const sh=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,2.4,10),CORM);const hd=new THREE.Mesh(new THREE.ConeGeometry(.5,1,12),CORM);hd.position.y=-1.6;hd.rotation.x=Math.PI;ag.add(sh,hd);ag.rotation.z=s>0?0:Math.PI;ag.userData.s=s;g.add(ag);arrows.push(ag);});
+ const inj=flow(wp,160,14,.26,(d,i,v,t)=>{const [,c]=fracPhase(t%FRAC_T);return hash(i)<c/650?COL.qz:COL.water;},.12);
+ ups.push(t=>{const u=t%FRAC_T;inj.on=u<13.5;
+  FRS.forEach((m,j)=>{const ord=3-j;const s=u<13.5?sm((u-.4-ord*.7)/1.4):1;let sc=.04+.96*s;m.scale.set(9.2*sc,4.3*sc,1);
+   m.material.opacity=u<13.5?.24:lerp(.24,.08,sm((u-13.5)/1.5));m.material.color.setHex(u<13.5?CY:0xbfe8f2);
+   const pr=u<15?clamp((u-3-ord*.45)/8,0,1):1;PROP[j].geometry.setDrawRange(0,Math.floor(NP*pr*s));});
+  arrows.forEach(a=>{const vis=u>13.2&&u<16.2;a.visible=vis;const k=sm((u-13.2)/1.4);a.position.set(136,-32+a.userData.s*(8.2-k*2.4),9.8);});
+  oil.visible=u>=15;if(u>=15){const k=(u-15)/5;for(let i=0;i<NO;i++){const [j,y0,z0,ph]=OS[i];const p=(k*1.4+ph)%1;let x,y,z;
+    if(p<.5){const q=sm(p/.5);x=FX[j];y=-32+y0*(1-q);z=z0*(1-q);}else{const q=(p-.5)/.5;at(wp,dEnt[j]-q*(dEnt[j]*.55),V);x=V.x;y=V.y;z=V.z;}
+    setP(oa,i,x,y,z);}oil.geometry.attributes.position.needsUpdate=true;}});
+}
+
+/* ================= КАМЕРА ================= */
+const camS={t:new THREE.Vector3(0,0,0),r:240,th:.16,ph:.8};
+let tw=null,cur=-1,playing=!RM,SPEED=1,dwell=0,DWELL=15,dragging=false,userTouched=false;
+const rf=()=>{const a=innerWidth/innerHeight;return a<.75?1.75:a<1.1?1.35:1;};
+function fly(k,dur){const to={t:new THREE.Vector3(k[0],k[1],k[2]),r:k[3]*rf(),th:k[4],ph:k[5]};const from={t:camS.t.clone(),r:camS.r,th:camS.th,ph:camS.ph};
+ let d=to.th-from.th;d=Math.atan2(Math.sin(d),Math.cos(d));to.th=from.th+d;const dist=from.t.distanceTo(to.t);
+ tw={from,to,s:performance.now(),dur:(RM?.6:dur||Math.min(4.2,2+dist/60))*1000,bump:Math.min(dist*.4,60)};}
+function stepCam(dt){if(tw){const e=clamp((performance.now()-tw.s)/tw.dur,0,1),k=ease(e),f=tw.from,o=tw.to,b=Math.sin(Math.PI*k);
+  camS.t.lerpVectors(f.t,o.t,k);camS.r=lerp(f.r,o.r,k)+b*tw.bump;camS.th=lerp(f.th,o.th,k);camS.ph=lerp(f.ph,o.ph,k)-b*Math.min(.25,tw.bump/240);if(e>=1)tw=null;}
+ else if(playing&&!dragging&&!RM){camS.th+=dt*.022;}
+ const sp=Math.sin(camS.ph);cam.position.set(camS.t.x+camS.r*sp*Math.sin(camS.th),camS.t.y+camS.r*Math.cos(camS.ph),camS.t.z+camS.r*sp*Math.cos(camS.th));cam.lookAt(camS.t);
+ scene.fog.density=.5/Math.max(camS.r,22);}
+
+/* ================= ИНТЕРФЕЙС ================= */
+const $=id=>document.getElementById(id);
+const pbody=$('pbody'),panel=$('panel'),bar=$('stepsBar'),chipT=$('chipT'),labsEl=$('labs');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+STAGES.forEach((s,i)=>{const b=document.createElement('button');b.className='step';b.type='button';b.innerHTML=`<b>${String(i+1).padStart(2,'0')}</b><span>${esc(s.n)}</span>`;b.addEventListener('click',()=>{go(i);});bar.appendChild(b);s.btn=b;});
+// выноски
+STAGES.forEach((s,i)=>{s.lab=s.labs.map(([p,t,sub])=>{const d=document.createElement('div');d.className='co';d.innerHTML=`<i class="dot"></i><i class="stem"></i><div class="box"><b>${esc(t)}</b><small>${esc(sub)}</small></div>`;labsEl.appendChild(d);return{el:d,p:new THREE.Vector3(...p)};});
+ const pl=document.createElement('button');pl.className='pill';pl.type='button';pl.innerHTML=`<b>${i+1}</b>${esc(s.n)}`;pl.addEventListener('click',()=>go(i));labsEl.appendChild(pl);s.pill={el:pl,p:new THREE.Vector3(...s.mark)};});
+
+function renderPanel(i){let h;
+ if(i<0){h=`<div class="eyebrow"><span class="n">∑</span>Обзор · 12 этапов</div><h1>${OVER.title}</h1><p class="lead">${OVER.lead}</p>
+  <div class="more"><div class="sect">Что течёт по линиям</div><div class="legend">${OVER.legend.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('')}</div>
+  <div class="sect">Маршрут</div><ol class="steps">${STAGES.map(s=>`<li>${esc(s.title)}</li>`).join('')}</ol>
+  <p class="note" style="border-left-color:var(--cy);background:rgba(127,227,255,.06)">Схема условная: состав и число аппаратов зависят от сырья месторождения. Нормы — по ISO 13503-2 и API RP 19C; пределы раздавливания даны как ориентир по API RP 56.</p></div>`;}
+ else{const s=STAGES[i];h=`<div class="eyebrow"><span class="n">${i+1}</span>Этап ${i+1} из ${STAGES.length}</div><h1>${esc(s.title)}</h1><p class="lead">${esc(s.lead)}</p>
+  <div class="more"><div class="sect">Что происходит</div><ol class="steps">${s.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>
+  <div class="sect">Цифры</div><div class="nums">${s.nums.map(([v,l])=>`<div class="num"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('')}</div>
+  <div class="sect">Что измеряют</div><div class="tags">${s.data.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>
+  <div class="sect">Что нужно</div><div class="tags">${s.need.map(x=>`<span class="tag n">${esc(x)}</span>`).join('')}</div>
+  ${s.note?`<p class="note">${esc(s.note)}</p>`:''}</div>`;}
+ pbody.innerHTML=`<div class="pfade">${h}</div>`;pbody.scrollTop=0;}
+
+function go(i,o){o=o||{};if(i>=STAGES.length)i=-1;cur=i;dwell=0;
+ fly(i<0?OVER.cam:STAGES[i].cam,o.dur);renderPanel(i);
+ STAGES.forEach((s,k)=>{s.btn.setAttribute('aria-current',k===i?'step':'false');s.btn.classList.toggle('done',i>=0&&k<i);s.btn.style.setProperty('--p',k<i&&i>=0?1:0);});
+ $('bOver').setAttribute('aria-pressed',String(i<0));
+ if(i>=0){const b=STAGES[i].btn;bar.scrollTo({left:b.offsetLeft-bar.clientWidth/2+b.offsetWidth/2,behavior:RM?'auto':'smooth'});}
+ try{history.replaceState(null,'',i<0?'#obzor':'#etap-'+(i+1));}catch(e){}}
+function setPlay(p){playing=p;$('bPlay').setAttribute('aria-label',p?'Пауза':'Смотреть тур');$('playIco').innerHTML=p?'<path d="M7 5h3v14H7zM14 5h3v14h-3z"/>':'<path d="M7 4l13 8-13 8z"/>';}
+$('bPlay').onclick=()=>{setPlay(!playing);if(playing&&!tw)dwell=Math.min(dwell,DWELL-1);};
+const prev=()=>go(cur<=0?(cur<0?STAGES.length-1:-1):cur-1), next=()=>go(cur+1);
+$('bPrev').onclick=prev;$('bNext').onclick=next;$('bPrev2').onclick=prev;$('bNext2').onclick=next;
+$('bOver').onclick=()=>go(-1);
+const SPEEDS=[1,2,.5];$('bSpeed').onclick=()=>{SPEED=SPEEDS[(SPEEDS.indexOf(SPEED)+1)%3];$('bSpeed').textContent=(SPEED===.5?'0,5':SPEED)+'×';};
+$('bFull').onclick=()=>{const d=document;try{if(d.fullscreenElement)d.exitFullscreen();else{const p=d.documentElement.requestFullscreen&&d.documentElement.requestFullscreen();if(p&&p.catch)p.catch(()=>{});}}catch(e){}};
+$('bMin').onclick=()=>{const m=panel.classList.toggle('min');$('bMin').textContent=m?'Подробнее':'Свернуть';$('bMin').setAttribute('aria-expanded',String(!m));resize();};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){next();}else if(e.key==='ArrowLeft'){prev();}else if(e.key===' '&&e.target===document.body||e.key===' '&&e.target===canvas){e.preventDefault();$('bPlay').click();}else if(e.key==='o'||e.key==='щ'){go(-1);}else if(e.key==='f'||e.key==='а'){$('bFull').click();}});
+
+/* управление камерой */
+const ptrs=new Map();let pinch0=0,r0=0,moved=0;
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);r0=camS.r;}});
+canvas.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+ if(moved>4&&!dragging){dragging=true;canvas.classList.add('drag');tw=null;if(playing)setPlay(false);userTouched=true;$('hint').style.opacity=0;}
+ if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)camS.r=clamp(r0*pinch0/d,8,340);return;}
+ if(dragging){camS.th-=dx*.0055;camS.ph=clamp(camS.ph-dy*.0045,.18,cur===11?1.75:1.52);}});
+const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;if(!ptrs.size){dragging=false;canvas.classList.remove('drag');}};
+canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
+canvas.addEventListener('wheel',e=>{e.preventDefault();tw=null;camS.r=clamp(camS.r*Math.exp(e.deltaY*.0012),8,340);},{passive:false});
+
+/* размер и смещение кадра под панель */
+let W=0,Hh=0;
+function resize(){W=innerWidth;Hh=innerHeight;renderer.setSize(W,Hh,false);cam.aspect=W/Hh;
+ const pr=panel.getBoundingClientRect();let ox=0,oy=0;
+ if(W>760){ox=-(pr.right+8)/2;}else{oy=(Hh-pr.top-40)/2*.9;}
+ cam.setViewOffset(W,Hh,ox,oy,W,Hh);cam.updateProjectionMatrix();}
+addEventListener('resize',resize);
+
+/* выноски */
+const PV=new THREE.Vector3();
+function proj(p){PV.copy(p).project(cam);return{x:(PV.x*.5+.5)*W,y:(-PV.y*.5+.5)*Hh,ok:PV.z<1&&PV.z>-1};}
+function updLabels(){const show=!tw;STAGES.forEach((s,i)=>{const act=i===cur&&show;s.lab.forEach(l=>{if(!act){l.el.classList.remove('on');return;}const q=proj(l.p);const vis=q.ok&&q.x>10&&q.x<W-10&&q.y>120&&q.y<Hh-90;l.el.classList.toggle('on',vis);l.el.classList.toggle('l',q.x>W*.72);l.el.style.transform=`translate(${q.x.toFixed(1)}px,${q.y.toFixed(1)}px)`;});
+  const po=cur<0&&show;const q=proj(s.pill.p);s.pill.el.classList.toggle('on',po&&q.ok);if(po)s.pill.el.style.transform=`translate(${q.x.toFixed(1)}px,${q.y.toFixed(1)}px) translate(-50%,-100%)`;});}
+
+/* подсветка активного этапа */
+function updHi(dt){G.forEach((g,i)=>{const tgt=cur<0?.5:i===cur?.95:.18;const m=g.userData.lm;m.opacity+= (tgt-m.opacity)*Math.min(1,dt*3);});}
+
+/* фаза */
+let lastChip='';
+function updChip(t){let s;if(cur===10||cur===11){const [ph,c]=fracPhase(t%FRAC_T);s=`<span>${ph}</span>`+(c?` · <em>песок ~${c} кг/м³</em>`:'');}
+ else if(cur<0)s='<span>Весь цикл: 12 этапов, от недр до трещины</span>';else s=`<span>${STAGES[cur].state}</span>`;if(s!==lastChip){chipT.innerHTML=s;lastChip=s;}}
+
+/* цикл */
+const clock=new THREE.Clock();let T=0;
+function frame(){const dt=Math.min(clock.getDelta(),.05);const sdt=RM?dt*.4:dt*SPEED;T+=sdt;
+ for(let i=0;i<ups.length;i++)ups[i](T,sdt);
+ stepCam(dt);updHi(dt);
+ if(playing&&!tw){dwell+=dt*SPEED;if(cur>=0)STAGES[cur].btn.style.setProperty('--p',clamp(dwell/DWELL,0,1).toFixed(3));if(dwell>=(cur<0?8:DWELL))go(cur+1);}
+ updChip(T);renderer.render(scene,cam);updLabels();requestAnimationFrame(frame);}
+
+if(innerWidth<=760){panel.classList.add('min');$('bMin').textContent='Подробнее';$('bMin').setAttribute('aria-expanded','false');}
+resize();
+const hs=location.hash.match(/^#etap-(\d+)$/);
+if(hs){const i=clamp(+hs[1]-1,0,STAGES.length-1);const k=STAGES[i].cam;camS.t.set(k[0],k[1],k[2]);camS.r=k[3]*rf()*1.6;camS.th=k[4]-.6;camS.ph=k[5]-.2;go(i);}
+else{camS.t.set(OVER.cam[0],OVER.cam[1],OVER.cam[2]);camS.r=OVER.cam[3]*rf()*1.25;camS.th=OVER.cam[4]-.5;camS.ph=OVER.cam[5]-.25;go(-1,{dur:3.4});dwell=0;}
+setPlay(playing);
+requestAnimationFrame(frame);
+})();
+</script>
